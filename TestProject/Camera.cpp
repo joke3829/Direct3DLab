@@ -16,6 +16,13 @@ CCamera::CCamera(ComPtr<ID3D12Device>& pd3dDevice)
 	m_fAspect = 1080.0f / 720.0f;
 	m_fNear = 1.0f;
 	m_fFar = 500.0f;
+	SetCameraEye(XMFLOAT3(0.0f, 0.0f, -30.0f));
+	VIEW_PROJ_MATRIX t;		// 임시 변수
+	::CreateUploadBuffer(pd3dDevice, m_pd3dViewProj, t);
+	m_pd3dViewProj->Map(0, NULL, (void**)&m_vpMatrix);
+
+	// 투영변환은 변할 일이 크게 없다
+	UpdateProjMatrix();
 }
 
 void CCamera::SetViewportAndScissorRect(ID3D12GraphicsCommandList* pd3dCommandList)
@@ -37,4 +44,14 @@ void CCamera::UpdateViewMatrix()
 void CCamera::UpdateProjMatrix()
 {
 	XMStoreFloat4x4(&m_xmf4x4ProjMatrix, XMMatrixPerspectiveFovLH(m_fFOV, m_fAspect, m_fNear, m_fFar));
+}
+
+void CCamera::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	UpdateViewMatrix();
+	XMStoreFloat4x4(&(m_vpMatrix->xmf4x4Proj), XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4ProjMatrix)));
+	XMStoreFloat4x4(&(m_vpMatrix->xmf4x4View), XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4ViewMatrix)));
+	//m_vpMatrix->xmf4x4Proj = m_xmf4x4ProjMatrix;
+	//m_vpMatrix->xmf4x4View = m_xmf4x4ViewMatrix;
+	pd3dCommandList->SetGraphicsRootConstantBufferView(1, m_pd3dViewProj->GetGPUVirtualAddress());
 }

@@ -74,20 +74,20 @@ void CreateVertexBuffer(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandL
 	d3dResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	d3dResourceDesc.Height = 1;
 	d3dResourceDesc.Width = sizeof(T) * vData.size();
-	d3dResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	d3dResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	d3dResourceDesc.SampleDesc.Count = 1;
 	d3dResourceDesc.SampleDesc.Quality = 0;
 
 	pd3dDevice->CreateCommittedResource(&d3dHeapProperties, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, D3D12_RESOURCE_STATE_COPY_DEST,
 		NULL, __uuidof(ID3D12Resource), (void**)&pd3dVertexBuffer);
 
-	if (pd3dVertexUploadBuffer) {
+	//if (pd3dVertexUploadBuffer) {
 		d3dHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 		pd3dDevice->CreateCommittedResource(&d3dHeapProperties, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)&pd3dVertexUploadBuffer);
 
 		D3D12_RANGE d3dReadRange = { 0, 0 };
-		T* pBufferDataBegin = NULL;
+		void* pBufferDataBegin = NULL;
 		pd3dVertexUploadBuffer->Map(0, &d3dReadRange, (void**)&pBufferDataBegin);
 		::memcpy(pBufferDataBegin, vData.data(), sizeof(T) * vData.size());
 		pd3dVertexUploadBuffer->Unmap(0, NULL);
@@ -103,7 +103,7 @@ void CreateVertexBuffer(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandL
 		d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 		d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
-	}
+	//}
 }
 
 template<class T>
@@ -119,17 +119,17 @@ void CreateUploadBuffer(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>
 
 	D3D12_RESOURCE_DESC d3dResourceDesc;
 	::ZeroMemory(&d3dResourceDesc, sizeof(D3D12_RESOURCE_DESC));
-	d3dResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_UNKNOWN;
+	d3dResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	d3dResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
 	d3dResourceDesc.MipLevels = 1;
-	d3dResourceDesc.Alignment = 1;
+	d3dResourceDesc.Alignment = 0;
 	d3dResourceDesc.DepthOrArraySize = 1;
 	d3dResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	d3dResourceDesc.Height = 1;
-	d3dResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	d3dResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	d3dResourceDesc.SampleDesc.Count = 1;
 	d3dResourceDesc.SampleDesc.Quality = 0;
-	d3dResourceDesc.Width = sizeof(Tdata);
-	pd3dDevice->CreateCommittedResource(&d3dHeapPro, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+	d3dResourceDesc.Width = ((sizeof(Tdata) + 255) & ~255);
+	HRESULT result = pd3dDevice->CreateCommittedResource(&d3dHeapPro, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		NULL, __uuidof(ID3D12Resource), (void**)&pd3dResource);
 }

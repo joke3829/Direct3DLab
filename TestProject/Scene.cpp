@@ -7,16 +7,19 @@ void CScene::CreateGrahicsRootSignature(ID3D12Device* pd3dDevice)
 	d3dRootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	d3dRootParameter[0].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[0].Descriptor.ShaderRegister = 0;
-	d3dRootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	d3dRootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	// 카메라(뷰, 투영)
 	d3dRootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	d3dRootParameter[1].Descriptor.RegisterSpace = 1;
-	d3dRootParameter[1].Descriptor.ShaderRegister = 0;
-	d3dRootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	d3dRootParameter[1].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[1].Descriptor.ShaderRegister = 1;
+	d3dRootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	D3D12_ROOT_SIGNATURE_DESC d3dRSD;
 	::ZeroMemory(&d3dRSD, sizeof(D3D12_ROOT_SIGNATURE_DESC));
-	d3dRSD.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	d3dRSD.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 	d3dRSD.NumParameters = 2;
 	d3dRSD.pParameters = d3dRootParameter;
 	d3dRSD.NumStaticSamplers = 0;
@@ -25,7 +28,7 @@ void CScene::CreateGrahicsRootSignature(ID3D12Device* pd3dDevice)
 	ID3DBlob* pd3dBlob = NULL;
 	ID3DBlob* pd3dErrorBlob = NULL;
 	D3D12SerializeRootSignature(&d3dRSD, D3D_ROOT_SIGNATURE_VERSION_1, &pd3dBlob, &pd3dErrorBlob);
-	pd3dDevice->CreateRootSignature(0, pd3dBlob->GetBufferPointer(), pd3dBlob->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)&m_pd3dGraphicsRootSignature);
+	HRESULT hResult = pd3dDevice->CreateRootSignature(0, pd3dBlob->GetBufferPointer(), pd3dBlob->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)&m_pd3dGraphicsRootSignature);
 
 	if (pd3dBlob)
 		pd3dBlob->Release();
@@ -46,12 +49,14 @@ D3D12_SHADER_BYTECODE CScene::CreateShaderFromFile(WCHAR* pszFileName, LPCSTR ps
 D3D12_INPUT_LAYOUT_DESC CScene::CreateInputLayout()
 {
 	// 안되면 여기 한번 체크
-	std::unique_ptr<D3D12_INPUT_ELEMENT_DESC[]> pd3dIEdesc = std::make_unique<D3D12_INPUT_ELEMENT_DESC[]>(2);
+	//std::unique_ptr<D3D12_INPUT_ELEMENT_DESC[]> pd3dIEdesc = std::make_unique<D3D12_INPUT_ELEMENT_DESC[]>(2);
+	D3D12_INPUT_ELEMENT_DESC* pd3dIEdesc = new D3D12_INPUT_ELEMENT_DESC[2];
 	pd3dIEdesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEdesc[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	D3D12_INPUT_LAYOUT_DESC d3dILDesc;
 	d3dILDesc.NumElements = 2;
-	d3dILDesc.pInputElementDescs = pd3dIEdesc.get();
+	//d3dILDesc.pInputElementDescs = pd3dIEdesc.get();
+	d3dILDesc.pInputElementDescs = pd3dIEdesc;
 
 	return d3dILDesc;
 }
@@ -62,7 +67,7 @@ D3D12_BLEND_DESC CScene::CreateBlendDesc()
 	::ZeroMemory(&d3dBlendDesc, sizeof(D3D12_BLEND_DESC));
 	d3dBlendDesc.AlphaToCoverageEnable = FALSE;
 	d3dBlendDesc.IndependentBlendEnable = FALSE;
-	d3dBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	d3dBlendDesc.RenderTarget[0].BlendEnable = FALSE;
 	d3dBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 	d3dBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	d3dBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
@@ -82,17 +87,17 @@ D3D12_DEPTH_STENCIL_DESC CScene::CreateDepthStencilDesc()
 	d3dDSDesc.DepthEnable = TRUE;
 	d3dDSDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	d3dDSDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	d3dDSDesc.StencilEnable = TRUE;
+	d3dDSDesc.StencilEnable = FALSE;
 	d3dDSDesc.StencilReadMask = 0x00;
 	d3dDSDesc.StencilWriteMask = 0x00;
 	d3dDSDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
 	d3dDSDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
 	d3dDSDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
 	d3dDSDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-	d3dDSDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_REPLACE;
-	d3dDSDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_REPLACE;
+	d3dDSDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDSDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
 	d3dDSDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
-	d3dDSDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+	d3dDSDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
 
 	return d3dDSDesc;
 }
@@ -124,8 +129,8 @@ void CScene::CreatePipelineState(ID3D12Device* pd3dDevice)
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineDesc;
 	::ZeroMemory(&d3dPipelineDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	d3dPipelineDesc.pRootSignature = m_pd3dGraphicsRootSignature;
-	d3dPipelineDesc.VS = CreateShaderFromFile(L"Shader.hlsl", "VS_Diffused", "vs_5_1", &pd3dBlob);
-	d3dPipelineDesc.PS = CreateShaderFromFile(L"Shader.hlsl", "PS_Diffused", "ps_5_1", &pd3dPSBlob);
+	d3dPipelineDesc.VS = CreateShaderFromFile(L"Shader.hlsl", "VSDiffused", "vs_5_1", &pd3dBlob);
+	d3dPipelineDesc.PS = CreateShaderFromFile(L"Shader.hlsl", "PSDiffused", "ps_5_1", &pd3dPSBlob);
 	d3dPipelineDesc.InputLayout = CreateInputLayout();
 	d3dPipelineDesc.BlendState = CreateBlendDesc();
 	d3dPipelineDesc.RasterizerState = CreateRasterizerDesc();
@@ -138,7 +143,7 @@ void CScene::CreatePipelineState(ID3D12Device* pd3dDevice)
 	d3dPipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	d3dPipelineDesc.SampleMask = UINT_MAX;
 
-	pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineDesc, __uuidof(ID3D12PipelineState), (void**)&m_pd3dPipelineState);
+	HRESULT hResult = pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineDesc, __uuidof(ID3D12PipelineState), (void**)&m_pd3dPipelineState);
 
 	// input element 동적 할당 시 제거 코드 여기 작성
 }
@@ -158,6 +163,8 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 
 void CWallScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	m_pCamera = std::make_unique<CCamera>(pd3dDevice);
+
 	// 이 작업 이후 바로 gpu 명령이 끝나길 기다린다.
 	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, GREEN));
 	m_vGameObjects.push_back(std::make_unique<CWallObject>(pd3dDevice));
@@ -170,6 +177,8 @@ void CWallScene::SetMeshes()
 
 void CWallScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	PrepareRender(pd3dCommandList);
+	m_pCamera->UpdateShaderVariables(pd3dCommandList);
 	for (int i = 0; i < m_vGameObjects.size(); ++i)
 		m_vGameObjects[i]->Render(pd3dCommandList);
 }

@@ -13,6 +13,10 @@ void CGameFramework::InitFramework(HINSTANCE hInstance, HWND hWnd)
 	CreateRTVDSV();
 
 	m_pScene = std::make_unique<CWallScene>();
+
+	m_pScene->CreateGrahicsRootSignature(m_pd3dDevice.Get());
+	m_pScene->CreatePipelineState(m_pd3dDevice.Get());
+	BuildObject();
 }
 
 void CGameFramework::BuildObject()
@@ -285,6 +289,8 @@ void CGameFramework::FrameAdvance()
 
 
 	// 렌더링 코드 추가
+	m_pScene->Render(m_pd3dCommandList);
+
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

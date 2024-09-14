@@ -37,7 +37,7 @@ class CMesh {
 public:
 	void ReleaseUploadBuffer();
 
-	virtual void Render() {}
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList) {}
 protected:
 	D3D12_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology;
 

@@ -20,7 +20,7 @@ private:
 	D3D12_VIEWPORT m_d3dViewport;
 	D3D12_RECT m_d3dScissorRect;
 
-	ID3D12Resource* m_pd3dViewProj{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dViewProj{ nullptr };
 	std::unique_ptr<VIEW_PROJ_MATRIX> m_vpMatrix;
 
 	XMFLOAT4X4 m_xmf4x4ViewMatrix;

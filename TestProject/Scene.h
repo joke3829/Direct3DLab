@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "GameObject.h"
+#include "Camera.h"
 
 class CScene {
 public:
@@ -37,4 +38,5 @@ public:
 private:
 	std::vector<std::shared_ptr<CMesh>> m_vMeshes;
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjects;
+	std::unique_ptr<CCamera> m_pCamera;
 };

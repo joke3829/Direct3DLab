@@ -34,7 +34,9 @@ const XMFLOAT3 CGameObject::getPosition()
 void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	// 루트 시그니처를 이용
-	memcpy(m_pxmf4x4World.get(), &m_xmf4x4World, sizeof(XMFLOAT4X4));
+	XMFLOAT4X4 xmf4x4World;
+	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	memcpy(m_pxmf4x4World.get(), &xmf4x4World, sizeof(XMFLOAT4X4));
 	pd3dCommandList->SetGraphicsRootConstantBufferView(0, m_xmf4WorldBuffer->GetGPUVirtualAddress());
 }
 
@@ -42,6 +44,6 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	if (m_pMesh) {
 		UpdateShaderVariables(pd3dCommandList);
-		m_pMesh->Render();
+		m_pMesh->Render(pd3dCommandList);
 	}
 }
