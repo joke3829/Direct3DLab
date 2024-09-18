@@ -83,12 +83,12 @@ void CreateVertexBuffer(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandL
 
 	//if (pd3dVertexUploadBuffer) {
 		d3dHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-		pd3dDevice->CreateCommittedResource(&d3dHeapProperties, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc,
+		HRESULT hResult = pd3dDevice->CreateCommittedResource(&d3dHeapProperties, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)&pd3dVertexUploadBuffer);
 
 		D3D12_RANGE d3dReadRange = { 0, 0 };
-		void* pBufferDataBegin = NULL;
-		pd3dVertexUploadBuffer->Map(0, &d3dReadRange, (void**)&pBufferDataBegin);
+		T* pBufferDataBegin = NULL;
+		HRESULT hr = pd3dVertexUploadBuffer->Map(0, &d3dReadRange, (void**)&pBufferDataBegin);
 		::memcpy(pBufferDataBegin, vData.data(), sizeof(T) * vData.size());
 		pd3dVertexUploadBuffer->Unmap(0, NULL);
 

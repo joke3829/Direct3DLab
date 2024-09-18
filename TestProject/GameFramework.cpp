@@ -12,6 +12,7 @@ void CGameFramework::InitFramework(HINSTANCE hInstance, HWND hWnd)
 	CreateSwapChain();
 	CreateRTVDSV();
 
+	//m_pScene = std::make_unique<NoShaderScene>();
 	m_pScene = std::make_unique<CWallScene>();
 
 	m_pScene->CreateGrahicsRootSignature(m_pd3dDevice.Get());
@@ -21,8 +22,18 @@ void CGameFramework::InitFramework(HINSTANCE hInstance, HWND hWnd)
 
 void CGameFramework::BuildObject()
 {
+	// 오브젝트 생성시 커맨드 명령 실행 필수(upload버퍼가 죽는다)
+	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
+
+
 	m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+
+
+	m_pd3dCommandList->Close();
+	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
+	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 	WaitForGPUComplete();
+
 	dynamic_cast<CWallScene*>(m_pScene.get())->SetMeshes();
 }
 
@@ -260,21 +271,20 @@ void CGameFramework::FrameAdvance()
 
 	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
 
-	D3D12_VIEWPORT d3dvp;
-	d3dvp.Height = FRAME_BUFFER_HEIGHT;
-	d3dvp.MaxDepth = 1.0f;
-	d3dvp.MinDepth = 0.0f;
-	d3dvp.Width = FRAME_BUFFER_WIDTH;
-	d3dvp.TopLeftX = 0;
-	d3dvp.TopLeftY = 0;
+	// 셰이더 안쓸때 사용=====================================================
+	/*D3D12_VIEWPORT d3dViewport;
+	d3dViewport.Height = 720;
+	d3dViewport.MaxDepth = 1.0f;
+	d3dViewport.MinDepth = 0.0f;
+	d3dViewport.TopLeftX = 0;
+	d3dViewport.TopLeftY = 0;
+	d3dViewport.Width = 1280;
 
-	D3D12_RECT d3dRect;
-	d3dRect.left = 0;
-	d3dRect.right = 1280;
-	d3dRect.top = 0;
-	d3dRect.bottom = 720;
-	m_pd3dCommandList->RSSetViewports(1, &d3dvp);
-	m_pd3dCommandList->RSSetScissorRects(1, &d3dRect);
+	D3D12_RECT d3dSR = { 0, 0, 1280, 720 };
+
+	m_pd3dCommandList->RSSetViewports(1, &d3dViewport);
+	m_pd3dCommandList->RSSetScissorRects(1, &d3dSR);*/
+	//=========================================================================
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandle = m_pd3dRTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	d3dCPUHandle.ptr += (m_nSwapChainBufferIndex * m_nRTVIncrementSize);

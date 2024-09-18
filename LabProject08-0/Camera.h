@@ -41,7 +41,7 @@ protected:
 	CPlayer							*m_pPlayer;
 
 	ID3D12Resource					*m_pd3dcbCamera = NULL;
-	std::unique_ptr<VS_CB_CAMERA_INFO>				m_pcbMappedCamera;
+	VS_CB_CAMERA_INFO*			m_pcbMappedCamera = NULL;
 
 public:
 	CCamera();

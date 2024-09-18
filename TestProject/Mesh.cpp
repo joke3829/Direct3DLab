@@ -32,10 +32,16 @@ void CMesh::ReleaseUploadBuffer()
 		m_pd3dIndexUploadBuffer.Reset();
 }
 
-CDiffusedSquareMesh::CDiffusedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, EnumCOLOR eColor, float width, float height)
+CDiffusedSquareMesh::CDiffusedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, EnumCOLOR eColor, bool bIndexed, float width, float height)
 {
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	XMFLOAT4 xmf4Color;
+	if (bIndexed) {
+		m_vVertices.reserve(4);
+		m_vIndices.reserve(6);
+	}
+	else
+		m_vVertices.reserve(6);
 	switch (eColor) {
 	case RED:
 		xmf4Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -52,28 +58,42 @@ CDiffusedSquareMesh::CDiffusedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D1
 	}
 	float halfWIdth = width / 2;
 	float halfHeight = height / 2;
-	m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, halfHeight, 0), xmf4Color));
-	m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, -halfHeight, 0), xmf4Color));
-	m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, -halfHeight, 0), xmf4Color));
-	m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, halfHeight, 0), xmf4Color));
 
-	// 0: 오른쪽 위, 1:오른쪽 아래, 2:왼쪽 아래, 3:왼쪽 위
-	m_vIndices.push_back(0);
-	m_vIndices.push_back(1);
-	m_vIndices.push_back(2);
-	m_vIndices.push_back(0);
-	m_vIndices.push_back(2);
-	m_vIndices.push_back(3);
+	if (bIndexed) {
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, halfHeight, 0.5), XMFLOAT4(1.0, 0.0, 0.0, 1.0)));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, -halfHeight, 0.5), XMFLOAT4(0.0, 1.0, 0.0, 1.0)));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, -halfHeight, 0.5), XMFLOAT4(0.0, 0.0, 1.0, 1.0)));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, halfHeight, 0.5), XMFLOAT4(0.5, 0.5, 0.5, 1.0)));
+
+		// 0: 오른쪽 위, 1:오른쪽 아래, 2:왼쪽 아래, 3:왼쪽 위
+		m_vIndices.push_back(0);
+		m_vIndices.push_back(1);
+		m_vIndices.push_back(2);
+		m_vIndices.push_back(0);
+		m_vIndices.push_back(2);
+		m_vIndices.push_back(3);
+	}
+	else {
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, halfHeight, 0.5), xmf4Color));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, -halfHeight, 0.5), xmf4Color));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, -halfHeight, 0.5), xmf4Color));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(halfWIdth, halfHeight, 0.5), xmf4Color));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, -halfHeight, 0.5), xmf4Color));
+		m_vVertices.push_back(CDiffusedVertex(XMFLOAT3(-halfWIdth, halfHeight, 0.5), xmf4Color));
+	}
+
 
 	::CreateVertexBuffer(pd3dDevice, pd3dCommandList, m_pd3dVertexBuffer, m_vVertices, m_pd3dVertexUploadBuffer);
-	::CreateVertexBuffer(pd3dDevice, pd3dCommandList, m_pd3dIndexBuffer, m_vIndices, m_pd3dIndexUploadBuffer);
 	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
 	m_d3dVertexBufferView.SizeInBytes = sizeof(CDiffusedVertex) * m_vVertices.size();
 	m_d3dVertexBufferView.StrideInBytes = sizeof(CDiffusedVertex);
 
-	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
-	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_vIndices.size();
+	if (bIndexed) {
+		::CreateVertexBuffer(pd3dDevice, pd3dCommandList, m_pd3dIndexBuffer, m_vIndices, m_pd3dIndexUploadBuffer);
+		m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
+		m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_vIndices.size();
+	}
 }
 
 const size_t CDiffusedSquareMesh::getVtxNum()

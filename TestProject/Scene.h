@@ -17,8 +17,8 @@ public:
 	D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 	D3D12_RASTERIZER_DESC CreateRasterizerDesc();
 
-	void CreateGrahicsRootSignature(ID3D12Device* pd3dDevice);
-	void CreatePipelineState(ID3D12Device* pd3dDevice);
+	virtual void CreateGrahicsRootSignature(ID3D12Device* pd3dDevice);
+	virtual void CreatePipelineState(ID3D12Device* pd3dDevice);
 
 	void PrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList);
@@ -39,4 +39,15 @@ private:
 	std::vector<std::shared_ptr<CMesh>> m_vMeshes;
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjects;
 	std::unique_ptr<CCamera> m_pCamera;
+};
+
+// ===========================================================================================
+class NoShaderScene : public CScene {
+public:
+	NoShaderScene() : CScene() { }
+	void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) {};
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList);
+
+	//void CreateGrahicsRootSignature(ID3D12Device* pd3dDevice);
+	void CreatePipelineState(ID3D12Device* pd3dDevice);
 };

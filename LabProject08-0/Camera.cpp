@@ -20,7 +20,6 @@ CCamera::CCamera()
 	m_xmf3LookAtWorld = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_nMode = 0x00;
 	m_pPlayer = NULL;
-	m_pcbMappedCamera = std::make_unique<VS_CB_CAMERA_INFO>();
 }
 
 CCamera::CCamera(CCamera *pCamera)

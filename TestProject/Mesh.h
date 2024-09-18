@@ -54,7 +54,7 @@ protected:
 
 class CDiffusedSquareMesh : public CMesh {
 public:
-	CDiffusedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, EnumCOLOR eColor = RED, float width = 5.0f, float height = 5.0f);
+	CDiffusedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, EnumCOLOR eColor = RED, bool bIndexed = true, float width = 5.0f, float height = 5.0f);
 
 	const size_t getVtxNum();	// 점의 개수를 반환
 
@@ -64,3 +64,7 @@ private:
 	std::vector<UINT> m_vIndices;
 };
 
+//class CTriangleMesh : public CMesh {
+//	CTriangleMesh(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+//	void Render(ID3D12GraphicsCommandList* pd3dCommandList);
+//};

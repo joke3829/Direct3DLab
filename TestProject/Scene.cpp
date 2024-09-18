@@ -107,7 +107,7 @@ D3D12_RASTERIZER_DESC CScene::CreateRasterizerDesc()
 	D3D12_RASTERIZER_DESC d3dRDesc;
 	::ZeroMemory(&d3dRDesc, sizeof(D3D12_RASTERIZER_DESC));
 	d3dRDesc.FillMode = D3D12_FILL_MODE_SOLID;
-	d3dRDesc.CullMode = D3D12_CULL_MODE_BACK;
+	d3dRDesc.CullMode = D3D12_CULL_MODE_NONE;
 	d3dRDesc.AntialiasedLineEnable = FALSE;
 	d3dRDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 	d3dRDesc.DepthBias = 0;
@@ -150,6 +150,7 @@ void CScene::CreatePipelineState(ID3D12Device* pd3dDevice)
 
 void CScene::PrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	
 	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 	pd3dCommandList->SetPipelineState(m_pd3dPipelineState);
 }
@@ -166,7 +167,7 @@ void CWallScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCom
 	m_pCamera = std::make_unique<CCamera>(pd3dDevice);
 
 	// 이 작업 이후 바로 gpu 명령이 끝나길 기다린다.
-	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, GREEN));
+	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, RED, true, 0.8, 0.8));
 	m_vGameObjects.push_back(std::make_unique<CWallObject>(pd3dDevice));
 }
 
@@ -178,7 +179,47 @@ void CWallScene::SetMeshes()
 void CWallScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	PrepareRender(pd3dCommandList);
+	m_pCamera->SetViewportAndScissorRect(pd3dCommandList);
 	m_pCamera->UpdateShaderVariables(pd3dCommandList);
 	for (int i = 0; i < m_vGameObjects.size(); ++i)
 		m_vGameObjects[i]->Render(pd3dCommandList);
+}
+
+//========================================================================
+
+void NoShaderScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
+	pd3dCommandList->SetPipelineState(m_pd3dPipelineState);
+	pd3dCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	pd3dCommandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void NoShaderScene::CreatePipelineState(ID3D12Device* pd3dDevice)
+{
+	ID3DBlob* pd3dBlob{ nullptr };
+	ID3DBlob* pd3dPSBlob{ nullptr };
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineDesc;
+	::ZeroMemory(&d3dPipelineDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	d3dPipelineDesc.pRootSignature = m_pd3dGraphicsRootSignature;
+	d3dPipelineDesc.VS = CreateShaderFromFile(L"Shader.hlsl", "VSNoShader", "vs_5_1", &pd3dBlob);
+	d3dPipelineDesc.PS = CreateShaderFromFile(L"Shader.hlsl", "PSNoShader", "ps_5_1", &pd3dPSBlob);
+	d3dPipelineDesc.InputLayout.NumElements = 0;
+	d3dPipelineDesc.InputLayout.pInputElementDescs = NULL;
+	d3dPipelineDesc.BlendState = CreateBlendDesc();
+	d3dPipelineDesc.RasterizerState = CreateRasterizerDesc();
+	d3dPipelineDesc.DepthStencilState = CreateDepthStencilDesc();
+	d3dPipelineDesc.SampleDesc.Count = 1;
+	d3dPipelineDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineDesc.NumRenderTargets = 1;
+	d3dPipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineDesc.SampleMask = UINT_MAX;
+
+	HRESULT hResult = pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineDesc, __uuidof(ID3D12PipelineState), (void**)&m_pd3dPipelineState);
+
+	// input element 동적 할당 시 제거 코드 여기 작성
 }
