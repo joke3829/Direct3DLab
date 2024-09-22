@@ -213,6 +213,53 @@ void CLightScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCo
 
 void CLightScene::CreateGrahicsRootSignature(ID3D12Device* pd3dDevice)
 {
+	D3D12_DESCRIPTOR_RANGE d3dDescriptorRanges[2];
+	// 0번 월드변환
+	d3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	d3dDescriptorRanges[0].NumDescriptors = 1;
+	d3dDescriptorRanges[0].BaseShaderRegister = 0;
+	d3dDescriptorRanges[0].RegisterSpace = 0;
+	d3dDescriptorRanges[0].OffsetInDescriptorsFromTableStart = 0;
+	// 1번 마테리얼
+	d3dDescriptorRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	d3dDescriptorRanges[1].NumDescriptors = 1;
+	d3dDescriptorRanges[1].BaseShaderRegister = 2;
+	d3dDescriptorRanges[1].RegisterSpace = 0;
+	d3dDescriptorRanges[1].OffsetInDescriptorsFromTableStart = 1;
+
+	D3D12_ROOT_PARAMETER d3dRootParameter[4];
+	// 0번 카메라 정보
+	d3dRootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	d3dRootParameter[0].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[0].Descriptor.ShaderRegister = 1;
+	d3dRootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	// 1번 월드, 마테리얼 (서술자 테이블)
+	d3dRootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	d3dRootParameter[1].DescriptorTable.NumDescriptorRanges = 2;
+	d3dRootParameter[1].DescriptorTable.pDescriptorRanges = d3dDescriptorRanges;
+	d3dRootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	// 2번 전역 조명 정보(방향성 조명)
+	d3dRootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	d3dRootParameter[2].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[2].Descriptor.ShaderRegister = 3;
+	d3dRootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
+	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
+	d3dRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	d3dRootSignatureDesc.NumParameters = 3;
+	d3dRootSignatureDesc.NumStaticSamplers = 0;
+	d3dRootSignatureDesc.pParameters = d3dRootParameter;
+	d3dRootSignatureDesc.pStaticSamplers = nullptr;
+
+	ID3DBlob* pd3dBlob{ nullptr };
+	ID3DBlob* pd3dErrorBlob{ nullptr };
+
+	D3D12SerializeRootSignature(&d3dRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pd3dBlob, &pd3dErrorBlob);
+	pd3dDevice->CreateRootSignature(0, pd3dBlob->GetBufferPointer(), pd3dBlob->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)&m_pd3dGraphicsRootSignature);
+
+	pd3dBlob->Release();
+	pd3dErrorBlob->Release();
 
 }
 

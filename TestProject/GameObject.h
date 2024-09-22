@@ -2,6 +2,12 @@
 #include "stdafx.h"
 #include "Mesh.h"
 
+struct Material {
+	XMFLOAT4 cDiffused;
+	XMFLOAT4 cSpecular;
+	XMFLOAT4 cAmbient;
+	XMFLOAT4 cEmissive;
+};
 
 class CGameObject {
 public:

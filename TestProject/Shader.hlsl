@@ -21,10 +21,10 @@ struct Material
 
 struct DirectionLight
 {
-    float3 dirction;    // 방향
     float4 cDiffused;   
     float4 cSpecular;
     float4 cAmbient;
+    float3 dirction;    // 방향
 };
 //===============================================
 cbuffer cbWorldInfo : register(b0)
@@ -41,6 +41,11 @@ cbuffer cbCameraInfo : register(b1)
 cbuffer cbMaterialInfo : register(b2)
 {
     Material gMaterial;
+}
+
+cbuffer cbDirectionLightInfo : register(b3)
+{
+    DirectionLight gDirLight;
 }
 
 //===================================================

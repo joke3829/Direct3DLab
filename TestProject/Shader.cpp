@@ -109,6 +109,8 @@ void CLightShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ID3D12R
 
 	pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineStateDesc, __uuidof(ID3D12PipelineState), (void**)&m_pd3dPipelineState);
 
+	pd3dBlob->Release();
+	pd3dPSBlob->Release();
 	delete[] d3dPipelineStateDesc.InputLayout.pInputElementDescs;
 }
 
