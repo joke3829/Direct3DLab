@@ -16,7 +16,7 @@ CCamera::CCamera(ComPtr<ID3D12Device>& pd3dDevice)
 	m_fAspect = 1080.0f / 720.0f;
 	m_fNear = 1.0f;
 	m_fFar = 500.0f;
-	SetCameraEye(XMFLOAT3(0.0f, 0.0f, -30.0f));
+	SetCameraEye(XMFLOAT3(0.0f, 0.0f, -1.0f));
 	VIEW_PROJ_MATRIX t;		// 임시 변수
 	::CreateUploadBuffer(pd3dDevice, m_pd3dViewProj, t);
 	m_pd3dViewProj->Map(0, NULL, (void**)&m_vpMatrix);
@@ -38,6 +38,7 @@ void CCamera::SetCameraEye(XMFLOAT3 eye)
 
 void CCamera::UpdateViewMatrix()
 {
+	XMStoreFloat3(&m_xmf3At, XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3dir));
 	XMStoreFloat4x4(&m_xmf4x4ViewMatrix, XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
 }
 

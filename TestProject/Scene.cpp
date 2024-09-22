@@ -146,6 +146,7 @@ void CScene::CreatePipelineState(ID3D12Device* pd3dDevice)
 	HRESULT hResult = pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineDesc, __uuidof(ID3D12PipelineState), (void**)&m_pd3dPipelineState);
 
 	// input element 동적 할당 시 제거 코드 여기 작성
+	delete[] d3dPipelineDesc.InputLayout.pInputElementDescs;
 }
 
 void CScene::PrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
@@ -167,7 +168,7 @@ void CWallScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCom
 	m_pCamera = std::make_unique<CCamera>(pd3dDevice);
 
 	// 이 작업 이후 바로 gpu 명령이 끝나길 기다린다.
-	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, RED, true, 0.8, 0.8));
+	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, RED, true, 10.0, 10.0));
 	m_vGameObjects.push_back(std::make_unique<CWallObject>(pd3dDevice));
 }
 
@@ -175,6 +176,25 @@ void CWallScene::SetMeshes()
 {
 	m_vGameObjects[0]->SetMesh(m_vMeshes[0]);
 }
+
+void CWallScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lPAram)
+{
+	switch (wParam) {
+	case 'W': {
+		XMFLOAT3 xmf3Eye = m_pCamera->getCameraEye();
+		xmf3Eye.z += 5.0;
+		m_pCamera->SetCameraEye(xmf3Eye);
+		break;
+	}
+	case 'S': {
+		XMFLOAT3 xmf3Eye = m_pCamera->getCameraEye();
+		xmf3Eye.z -= 5.0;
+		m_pCamera->SetCameraEye(xmf3Eye);
+		break;
+	}
+	}
+}
+
 
 void CWallScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 {
@@ -184,6 +204,18 @@ void CWallScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 	for (int i = 0; i < m_vGameObjects.size(); ++i)
 		m_vGameObjects[i]->Render(pd3dCommandList);
 }
+
+
+void CLightScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+
+}
+
+void CLightScene::CreateGrahicsRootSignature(ID3D12Device* pd3dDevice)
+{
+
+}
+
 
 //========================================================================
 

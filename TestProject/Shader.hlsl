@@ -11,6 +11,22 @@ struct VS_OUTPUT
     float4 color : COLOR;
 };
 
+struct Material
+{
+    float4 cDiffused;
+    float4 cSpecular;
+    float4 cAmbient;
+    float4 cEmissive;
+};
+
+struct DirectionLight
+{
+    float3 dirction;    // πÊ«‚
+    float4 cDiffused;   
+    float4 cSpecular;
+    float4 cAmbient;
+};
+//===============================================
 cbuffer cbWorldInfo : register(b0)
 {
     matrix gmtxWorld : packoffset(c0);
@@ -22,10 +38,17 @@ cbuffer cbCameraInfo : register(b1)
     matrix gmtxProj : packoffset(c4);
 };
 
+cbuffer cbMaterialInfo : register(b2)
+{
+    Material gMaterial;
+}
+
+//===================================================
+
 VS_OUTPUT VSDiffused(VS_INPUT input)
 {
     VS_OUTPUT output;
-    output.positionW = float4(input.position, 1.0f); //mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+    output.positionW = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
     output.color = input.color;
     return output;
 }
@@ -52,4 +75,30 @@ float4 VSNoShader(uint nVertexID : SV_VertexID) : SV_POSITION
 float4 PSNoShader(float4 input : SV_POSITION) : SV_TARGET
 {
     return float4(1.0f, 1.0f, 0.0f, 1.0f);
+}
+
+//========================================================================
+
+struct VS_LIGHT_INPUT
+{
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+};
+
+struct VS_LIGHT_OUTPUT
+{
+    float4 positionW : SV_POSITION;
+    float3 normalW : NORMAL;
+};
+
+VS_LIGHT_OUTPUT VSLight(VS_LIGHT_INPUT input)
+{
+    VS_LIGHT_OUTPUT output;
+    return output;
+}
+
+float4 PSLight(VS_LIGHT_OUTPUT input) : SV_TARGET
+{
+    float4 dd = { 1.0, 0.0, 0.0, 1.0 };
+    return dd;
 }

@@ -12,6 +12,8 @@ public:
 	
 	void SetViewportAndScissorRect(ID3D12GraphicsCommandList* pd3dCommandList);
 	void SetCameraEye(XMFLOAT3 xmf3eye);
+
+	XMFLOAT3 getCameraEye() const { return m_xmf3Eye; }
 	
 	void UpdateViewMatrix();
 	void UpdateProjMatrix();
@@ -29,6 +31,8 @@ private:
 	XMFLOAT3 m_xmf3Eye{ XMFLOAT3(0.0f, 0.0f, 0.0f) };
 	XMFLOAT3 m_xmf3At{ XMFLOAT3(0.0f, 0.0f, 0.0f) };
 	XMFLOAT3 m_xmf3Up{ XMFLOAT3(0.0f, 1.0f, 0.0f) };
+	
+	XMFLOAT3 m_xmf3dir{ XMFLOAT3(0.0, 0.0, 1.0) };
 
 	float m_fFOV;		// FOV각
 	float m_fAspect;	// 화면 비

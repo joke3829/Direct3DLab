@@ -226,6 +226,8 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
 			break;
+		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 		}
 		break;
 	}
