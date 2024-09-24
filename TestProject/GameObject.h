@@ -7,6 +7,7 @@ struct Material {
 	XMFLOAT4 cSpecular;
 	XMFLOAT4 cAmbient;
 	XMFLOAT4 cEmissive;
+
 };
 
 class CGameObject {
@@ -26,7 +27,10 @@ public:
 
 	const XMFLOAT3 getPosition();
 
-	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice) {};
+	virtual void CreateCBV(ComPtr<ID3D12Device>& pd3dDevice) {};
+
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList);
 protected:
 	ComPtr<ID3D12Resource> m_xmf4WorldBuffer;
@@ -41,4 +45,20 @@ protected:
 class CWallObject : public CGameObject {
 public:
 	CWallObject(ComPtr<ID3D12Device>& pd3dDevice) : CGameObject(pd3dDevice) {}
+};
+
+class CLightObject : public CGameObject {
+public:
+	CLightObject(ComPtr<ID3D12Device>& pd3dDevice);
+
+	void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	void CreateCBV(ComPtr<ID3D12Device>& pd3dDevice);
+
+	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+protected:
+	Material m_material;
+	std::unique_ptr<Material> m_pMappedMaterial;
+
+	ComPtr<ID3D12DescriptorHeap> m_pd3dWMDescriptorHeap;	// 월드, 마테리얼 서술자 힙
+	UINT m_nCBVIncrementSize;	// 상수버퍼 증가 폭
 };

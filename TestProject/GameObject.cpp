@@ -47,3 +47,14 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 		m_pMesh->Render(pd3dCommandList);
 	}
 }
+
+CLightObject::CLightObject(ComPtr<ID3D12Device>& pd3dDevice)
+	: CGameObject(pd3dDevice)
+{
+	m_material.cAmbient = XMFLOAT4(0.2, 0.0, 0.0, 1.0);
+	m_material.cDiffused = XMFLOAT4(1.0, 0.0, 0.0, 1.0);
+	m_material.cEmissive = XMFLOAT4(0.0, 0.0, 0.0, 1.0);
+	m_material.cSpecular = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	m_pMappedMaterial = std::make_unique<Material>();
+
+}

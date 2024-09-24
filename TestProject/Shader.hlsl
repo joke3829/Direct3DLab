@@ -36,6 +36,7 @@ cbuffer cbCameraInfo : register(b1)
 {
     matrix gmtxView : packoffset(c0);
     matrix gmtxProj : packoffset(c4);
+    float3 cameraEye : packoffset(c8);
 };
 
 cbuffer cbMaterialInfo : register(b2)
