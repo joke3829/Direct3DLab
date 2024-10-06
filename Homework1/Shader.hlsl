@@ -12,9 +12,10 @@ struct VS_TEXTURED_INPUT
     float2 uv : TEXCOORD;
 };
 
-struct PS_TEXTURED_OUTPUT
+struct VS_TEXTURED_OUTPUT
 {
-    float4 positionW : SV_POSITION;
+    float4 position : SV_POSITION;
+    float4 positionW : POSITION;
     float3 normalW : NORMAL;
     float2 uv : TEXCOORD;
 };
@@ -49,3 +50,17 @@ sampler gStaticSampler : register(s0);
 
 //==================================================
 
+VS_TEXTURED_OUTPUT VSTextured(VS_TEXTURED_INPUT input)
+{
+    VS_TEXTURED_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+    output.positionW = mul(float4(input.position, 1.0f), gmtxWorld);
+    output.normalW = mul(input.normal, (float3x3) gmtxWorld);
+    output.uv = input.uv;
+    return output;
+}
+
+float4 PSTextured(VS_TEXTURED_OUTPUT input)
+{
+    return gtxtTexture.Sample(gStaticSampler, input.uv);
+}

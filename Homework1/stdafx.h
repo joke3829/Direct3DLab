@@ -51,3 +51,80 @@ using Microsoft::WRL::ComPtr;
 #define FRAME_BUFFER_HEIGHT 720
 
 #define FIXED_FRAME_RATE 60
+
+
+// 버텍스 버퍼용 함수
+template<class T>
+void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12Resource>& pd3dResource, std::vector<T>& vData, ComPtr<ID3D12Resource>& pd3dDefaultResource)
+{
+	D3D12_HEAP_PROPERTIES d3dHP;
+	::ZeroMemory(&d3dHP, sizeof(D3D12_HEAP_PROPERTIES));
+	d3dHP.Type = D3D12_HEAP_TYPE_UPLOAD;
+	d3dHP.VisibleNodeMask = 1;
+	d3dHP.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	d3dHP.CreationNodeMask = 1;
+	d3dHP.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+
+	D3D12_RESOURCE_DESC d3dRD;
+	::ZeroMemory(&d3dRD, sizeof(D3D12_RESOURCE_DESC));
+	d3dRD.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	d3dRD.Format = DXGI_FORMAT_UNKNOWN;
+	d3dRD.MipLevels = 1;
+	d3dRD.Alignment = 0;
+	d3dRD.DepthOrArraySize = 1;
+	d3dRD.Flags = D3D12_RESOURCE_FLAG_NONE;
+	d3dRD.Height = 1;
+	d3dRD.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	d3dRD.Width = sizeof(T) * vData.size();
+
+	
+	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
+
+	d3dHP.Type = D3D12_HEAP_TYPE_DEFAULT;
+	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_COPY_DEST, NULL, __uuidof(ID3D12Resource), (void**)pd3dDefaultResource.GetAddressOf());
+	T* pDataBegin;
+	D3D12_RANGE d3dRange{ 0, 0 };
+	pd3dResource->Map(0, &d3dRange, (void**)&pDataBegin);
+	::memcpy(pDataBegin, vData.data(), sizeof(T) * vData.size());
+	pd3dResource->Unmap(0, NULL);
+
+	pd3dCommandList->CopyResource(pd3dDefaultResource.Get(), pd3dResource.Get());
+	D3D12_RESOURCE_BARRIER d3dRB;
+	::ZeroMemory(&d3dRB, sizeof(D3D12_RESOURCE_BARRIER));
+	d3dRB.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	d3dRB.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	d3dRB.Transition.pResource = pd3dDefaultResource.Get();
+	d3dRB.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+
+	pd3dCommandList->ResourceBarrier(1. & d3dRB);
+}
+
+// 업로드 버퍼용 함수
+template<class T>
+void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12Resource>& pd3dResource, T& TData)
+{
+	D3D12_HEAP_PROPERTIES d3dHP;
+	::ZeroMemory(&d3dHP, sizeof(D3D12_HEAP_PROPERTIES));
+	d3dHP.Type = D3D12_HEAP_TYPE_UPLOAD;
+	d3dHP.VisibleNodeMask = 1;
+	d3dHP.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	d3dHP.CreationNodeMask = 1;
+	d3dHP.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+
+	D3D12_RESOURCE_DESC d3dRD;
+	::ZeroMemory(&d3dRD, sizeof(D3D12_RESOURCE_DESC));
+	d3dRD.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	d3dRD.Format = DXGI_FORMAT_UNKNOWN;
+	d3dRD.MipLevels = 1;
+	d3dRD.Alignment = 0;
+	d3dRD.DepthOrArraySize = 1;
+	d3dRD.Flags = D3D12_RESOURCE_FLAG_NONE;
+	d3dRD.Height = 1;
+	d3dRD.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	d3dRD.Width = sizeof(TData);
+
+
+	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
+}

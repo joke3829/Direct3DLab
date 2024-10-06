@@ -130,6 +130,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GameFramework.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stdafx.h" />
@@ -141,6 +143,8 @@
   <ItemGroup>
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="Homework1.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Timer.cpp" />
