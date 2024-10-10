@@ -5,10 +5,25 @@
 #pragma once
 #include "stdafx.h"
 #include "Mesh.h"
+#include "DDSTextureLoader12.h"
+#include "WICTextureLoader12.h"
 
-struct Material {
+// 텍스처는 하나가 아닌 여러개를 가질 수 있다.
 
+// 하나만 가지는 텍스쳐 클래스를 만들어보자
+class CSingleTexture {
+public:
+	//CSingleTexture() {}
+	CSingleTexture(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, const wchar_t* pszFileName, bool bDDS);	// 파일 경로받아서 리소스를 만들도록 설계하자
+
+	const ComPtr<ID3D12Resource>& getTexture();
+
+	void ReleaseUploadBuffer();
+protected:
+	ComPtr<ID3D12Resource> m_pd3dTexture{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dUploadBuffer{ nullptr };
 };
+
 
 class CGameObject {
 public:
@@ -21,19 +36,22 @@ public:
 	{
 		m_pMesh = pMesh;
 	}
-	void SetMaterial(std::shared_ptr<Material>& pMaterial)
+	void SetMaterial(std::shared_ptr<CSingleTexture>& pMaterial)
 	{
 		m_pMaterial = pMaterial;
 	}
+	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
+	virtual void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 	
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	std::shared_ptr<CMesh> m_pMesh{ nullptr };
-	std::shared_ptr<Material> m_pMaterial{ nullptr };
+	std::shared_ptr<CSingleTexture> m_pMaterial{ nullptr };
 
 	XMFLOAT4X4 m_xmf4x4World;
 	XMFLOAT4X4* m_pMappedWorld{ nullptr };
 	ComPtr<ID3D12Resource> m_pd3dWorldBuffer{ nullptr };
 
-
+	ComPtr<ID3D12DescriptorHeap> m_pd3dCbvSrvDescriptor;
 };

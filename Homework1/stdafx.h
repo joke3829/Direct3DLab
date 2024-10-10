@@ -76,13 +76,16 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphic
 	d3dRD.Height = 1;
 	d3dRD.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	d3dRD.Width = sizeof(T) * vData.size();
+	d3dRD.SampleDesc.Count = 1;
+	d3dRD.SampleDesc.Quality = 0;
 
 	
 	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
 
 	d3dHP.Type = D3D12_HEAP_TYPE_DEFAULT;
 	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_COPY_DEST, NULL, __uuidof(ID3D12Resource), (void**)pd3dDefaultResource.GetAddressOf());
-	T* pDataBegin;
+	vData[0];
+	T* pDataBegin = NULL;
 	D3D12_RANGE d3dRange{ 0, 0 };
 	pd3dResource->Map(0, &d3dRange, (void**)&pDataBegin);
 	::memcpy(pDataBegin, vData.data(), sizeof(T) * vData.size());
@@ -98,12 +101,12 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphic
 	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
 
-	pd3dCommandList->ResourceBarrier(1. & d3dRB);
+	pd3dCommandList->ResourceBarrier(1, &d3dRB);
 }
 
 // 업로드 버퍼용 함수
 template<class T>
-void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12Resource>& pd3dResource, T& TData)
+void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>& pd3dResource, T& TData)
 {
 	D3D12_HEAP_PROPERTIES d3dHP;
 	::ZeroMemory(&d3dHP, sizeof(D3D12_HEAP_PROPERTIES));
@@ -123,8 +126,10 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphic
 	d3dRD.Flags = D3D12_RESOURCE_FLAG_NONE;
 	d3dRD.Height = 1;
 	d3dRD.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	d3dRD.Width = sizeof(TData);
+	d3dRD.Width = (sizeof(TData) + 255) & ~255;
+	d3dRD.SampleDesc.Count = 1;
+	d3dRD.SampleDesc.Quality = 0;
 
 
-	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
+	HRESULT hResult = pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
 }

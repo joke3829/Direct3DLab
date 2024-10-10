@@ -13,7 +13,7 @@ CCamera::CCamera(ComPtr<ID3D12Device>& pd3dDevice)
 	m_vpMatrix = std::make_unique<VIEW_PROJ_MATRIX>();
 
 	m_fFOV = 90.0f;
-	m_fAspect = 1080.0f / 720.0f;
+	m_fAspect = 1280.0f / 720.0f;
 	m_fNear = 1.0f;
 	m_fFar = 500.0f;
 	SetCameraEye(XMFLOAT3(0.0f, 0.0f, -1.0f));

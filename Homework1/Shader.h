@@ -5,19 +5,25 @@
 //===================================================
 #pragma once
 #include "stdafx.h"
+#include "Object.h"
 
 class CShader {
 public:
 	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature) {};
 
-	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout() {};
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout() { D3D12_INPUT_LAYOUT_DESC p; return p; };
 	virtual D3D12_SHADER_BYTECODE CreateShaderFromFile(WCHAR* pszFileName, LPCSTR pszShaderName, LPCSTR pszShaderProfile, ID3DBlob** ppd3dShaderBlob);
 	virtual D3D12_BLEND_DESC CreateBlendDesc();
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 	virtual D3D12_RASTERIZER_DESC CreateRasterizerDesc();
 
+	virtual void SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {}
 
-	virtual void Render(ComPtr<ID3D12Device>& pd3dDevice) {};
+	virtual void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
+	
+
+
+	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
 protected:
 	ComPtr<ID3D12PipelineState> m_pd3dPipelineState{ nullptr };
 };
@@ -27,4 +33,19 @@ public:
 	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
+// 메뉴전용 조명을 사용하지 않는 텍스처셰이더
+class CMenuShader : public CShader {
+public:
+	CMenuShader() {}
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+	virtual void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	virtual void SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+protected:
+	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 };

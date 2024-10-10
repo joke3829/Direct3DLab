@@ -48,6 +48,10 @@ cbuffer cbDirectionLightInfo : register(b3)
 {
     DirectionLight gDirLight;
 }
+cbuffer cbTest : register(b4)
+{
+    float4 tett;
+}
 
 //===================================================
 
@@ -62,7 +66,7 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
 
 float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
 {
-    return (input.color);
+    return input.color;
 }
 
 float4 VSNoShader(uint nVertexID : SV_VertexID) : SV_POSITION

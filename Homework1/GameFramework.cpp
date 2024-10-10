@@ -16,6 +16,17 @@ bool CGameFramework::InitFramework(HWND hWnd, HINSTANCE hInstance)
 	CreateSwapChain();
 	CreateRTVDSV();
 
+	CoInitialize(NULL);
+
+	m_pCamera = std::make_shared<CCamera>(m_pd3dDevice);
+	m_pCamera->SetCameraEye(XMFLOAT3(0.0f, 0.0f, -250.0f));
+
+	m_pScene = std::make_unique<CMenuScene>();
+	m_pScene->SetCamera(m_pCamera);
+
+	m_nProgramState = 메인메뉴;
+	BuildObject();
+
 	return true;
 }
 
@@ -150,6 +161,20 @@ void CGameFramework::CreateRTVDSV()
 	m_pd3dDevice->CreateDepthStencilView(m_pd3dDSVBuffer.Get(), NULL, d3dCPUDescriptorHandle);
 }
 
+void CGameFramework::BuildObject()
+{
+	m_pd3dCommandAllocator->Reset();
+	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
+
+	m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+
+	m_pd3dCommandList->Close();
+	ID3D12CommandList* ppd3dCommandList[]{ m_pd3dCommandList.Get()};
+	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandList);
+	WaitForGPUComplete();
+}
+
+
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
@@ -226,22 +251,8 @@ void CGameFramework::FrameAdvance()
 
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dCPUHandle, TRUE, &d3dCPUHandleD);
 
-	// 셰이더 안쓸때 사용=====================================================
-	D3D12_VIEWPORT d3dViewport;
-	d3dViewport.Height = 720;
-	d3dViewport.MaxDepth = 1.0f;
-	d3dViewport.MinDepth = 0.0f;
-	d3dViewport.TopLeftX = 0;
-	d3dViewport.TopLeftY = 0;
-	d3dViewport.Width = 1280;
-
-	D3D12_RECT d3dSR = { 0, 0, 1280, 720 };
-
-	m_pd3dCommandList->RSSetViewports(1, &d3dViewport);
-	m_pd3dCommandList->RSSetScissorRects(1, &d3dSR);
-	//=========================================================================
 	// 렌더링 코드
-	
+	m_pScene->Render(m_pd3dCommandList);
 
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;

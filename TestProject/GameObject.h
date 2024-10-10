@@ -51,10 +51,10 @@ class CLightObject : public CGameObject {
 public:
 	CLightObject(ComPtr<ID3D12Device>& pd3dDevice);
 
-	void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
-	void CreateCBV(ComPtr<ID3D12Device>& pd3dDevice);
+	//void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	//void CreateCBV(ComPtr<ID3D12Device>& pd3dDevice);
 
-	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	//void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 protected:
 	Material m_material;
 	std::unique_ptr<Material> m_pMappedMaterial;

@@ -62,6 +62,8 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dIndexBuffer{ nullptr };
 	ComPtr<ID3D12Resource> m_pd3dIndexUploadBuffer{ nullptr };
 	UINT m_nIndices;
+
+	// 바운딩 박스 추가 바람
 };
 
 class CTexturedSqureMesh : public CMesh {

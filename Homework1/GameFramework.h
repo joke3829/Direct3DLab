@@ -5,6 +5,9 @@
 #pragma once
 #include "stdafx.h"
 #include "Timer.h"
+#include "Scene.h"
+
+enum ProgramState { 메인메뉴, 인게임 };
 
 class CGameFramework {
 public:
@@ -15,6 +18,8 @@ public:
 	void CreateCommandLAQ();	// commandList, allocator, queue 생성
 	void CreateSwapChain();		// swapChain 생성
 	void CreateRTVDSV();		// RTV, DSV 생성
+
+	void BuildObject();			// 현재 장면에 따른 오브젝트 빌드
 
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -57,5 +62,10 @@ private:
 	CGameTimer m_GameTimer;
 
 	_TCHAR m_pszFrameRate[50];
+
+	std::shared_ptr<CCamera> m_pCamera;
+
+	std::unique_ptr<CScene> m_pScene;
+	ProgramState m_nProgramState;
 };
 
