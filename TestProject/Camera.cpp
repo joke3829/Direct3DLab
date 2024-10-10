@@ -44,7 +44,8 @@ void CCamera::UpdateViewMatrix()
 
 void CCamera::UpdateProjMatrix()
 {
-	XMStoreFloat4x4(&m_xmf4x4ProjMatrix, XMMatrixPerspectiveFovLH(m_fFOV, m_fAspect, m_fNear, m_fFar));
+	XMStoreFloat4x4(&m_xmf4x4ProjMatrix, XMMatrixOrthographicLH(1280.0, 720.0, 1.0, 500.0));
+	//XMStoreFloat4x4(&m_xmf4x4ProjMatrix, XMMatrixPerspectiveFovLH(m_fFOV, m_fAspect, m_fNear, m_fFar));
 }
 
 void CCamera::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
