@@ -59,6 +59,7 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
 {
     VS_OUTPUT output;
     output.positionW = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+    //output.positionW = float4(input.position, 1.0f);
     output.color = input.color;
     return output;
 }

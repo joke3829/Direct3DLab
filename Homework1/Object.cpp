@@ -131,6 +131,7 @@ void CGameObject::CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice)
 
 void CGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
+	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
 	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
 }
 
@@ -138,9 +139,7 @@ void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
 	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
 	SetShaderVariables(pd3dCommandList);
-	//pd3dCommandList->SetGraphicsRootConstantBufferView(1, m_pd3dWorldBuffer->GetGPUVirtualAddress());
 	if (m_pMesh) {
-		int n = m_pMesh.use_count();
 		m_pMesh->Render(pd3dCommandList);
 	}
 }

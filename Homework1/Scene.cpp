@@ -94,8 +94,16 @@ void CMenuScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 		temp->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
 		temp->BuildObject(pd3dDevice, pd3dCommandList);
 	}
-	/*m_vShaders[0]->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
-	m_vShaders[0]->BuildObject(pd3dDevice, pd3dCommandList);*/
+}
+
+void CMenuScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		m_vShaders[0]->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+		break;
+	}
 }
 
 void CMenuScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)

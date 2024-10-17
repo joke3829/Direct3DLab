@@ -19,7 +19,7 @@ bool CGameFramework::InitFramework(HWND hWnd, HINSTANCE hInstance)
 	CoInitialize(NULL);
 
 	m_pCamera = std::make_shared<CCamera>(m_pd3dDevice);
-	m_pCamera->SetCameraEye(XMFLOAT3(0.0f, 0.0f, -250.0f));
+	m_pCamera->SetCameraEye(XMFLOAT3(0.0f, 0.0f, -20.0f));
 
 	m_pScene = std::make_unique<CMenuScene>();
 	m_pScene->SetCamera(m_pCamera);
@@ -187,7 +187,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
-		OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
+		//OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
 		break;
 	}
 	return 0;
@@ -201,16 +201,32 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
 			break;
+		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
 		}
 		break;
 	case WM_KEYUP:
+		m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 		break;
 	}
 }
 
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-
+	switch (m_nProgramState) {
+	case 메인메뉴:
+		switch (nMessage) {
+		case WM_LBUTTONDOWN:
+			m_pScene.reset();
+			//m_pScene = std::unique_ptr<>
+			m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+			break;
+		}
+		break;
+	case 인게임:
+		break;
+	}
 }
 
 void CGameFramework::WaitForGPUComplete()

@@ -12,7 +12,7 @@ class CCamera {
 public:
 	CCamera(ComPtr<ID3D12Device>& pd3dDevice);
 	void UpdateViewMatrix();
-	virtual void UpdateProjMatrix();
+	virtual void UpdateProjMatrix(bool bOrtho = false);
 	virtual void UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
 	void SetCameraEye(XMFLOAT3 xmf3Eye);

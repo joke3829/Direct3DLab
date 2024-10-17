@@ -168,15 +168,43 @@ void CMenuShader::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gra
 	std::shared_ptr<CSingleTexture> pSingle = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main.jpg", false);
 	std::shared_ptr<CMesh> pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 1280, 720);
 
-	m_vObjects.reserve(1);
-	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects.reserve(2);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));	// 메인
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));	// 설명창
 
 	// 메시와 텍스쳐 지정
 	m_vObjects[0]->SetMaterial(pSingle);
 	m_vObjects[0]->SetMesh(pMesh);
 
+	pSingle.reset(); pMesh.reset();
+	pSingle = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main2.jpg", false);
+	pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 960, 540);
+
+	m_vObjects[1]->SetMaterial(pSingle);
+	m_vObjects[1]->SetMesh(pMesh);
+	m_vObjects[1]->SetPosition(XMFLOAT3(0.0, 0.0, -0.5));
+
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
+	}
+}
+
+void CMenuShader::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lPAram)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'm':
+		case 'M':
+			if (m_bOnExplain)
+				m_bOnExplain = false;
+			else
+				m_bOnExplain = true;
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
 	}
 }
 
@@ -187,7 +215,10 @@ void CMenuShader::SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dComman
 
 void CMenuShader::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
-	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
+	/*for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->Render(pd3dCommandList);
-	}
+	}*/
+	m_vObjects[0]->Render(pd3dCommandList);
+	if (m_bOnExplain)
+		m_vObjects[1]->Render(pd3dCommandList);
 }

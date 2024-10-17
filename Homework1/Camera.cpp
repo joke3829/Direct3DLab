@@ -14,7 +14,7 @@ CCamera::CCamera(ComPtr<ID3D12Device>& pd3dDevice)
 	::CreateBufferResource(pd3dDevice, m_pd3dCameraBuffer, m_cameraInfo);
 	m_pd3dCameraBuffer->Map(0, NULL, (void**)&m_cInfoBegin);
 
-	UpdateProjMatrix();
+	UpdateProjMatrix(true);
 }
 
 void CCamera::UpdateViewMatrix()
@@ -29,9 +29,12 @@ void CCamera::UpdateViewMatrix()
 	//m_cInfoBegin->xmf4x4View = m_cameraInfo.xmf4x4View;
 }
 
-void CCamera::UpdateProjMatrix()
+void CCamera::UpdateProjMatrix(bool bOrtho)
 {
-	XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixPerspectiveFovLH(m_fFOV, m_fAspect, m_fNear, m_fFar));
+	if (bOrtho)
+		XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixOrthographicLH(1280.0f, 720.0f, 1.0f, 500.0f));
+	else
+		XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
 }
 
 void CCamera::SetCameraEye(XMFLOAT3 xmf3Eye)

@@ -166,7 +166,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 void CWallScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	m_pCamera = std::make_unique<CCamera>(pd3dDevice);
-
+	m_pCamera->SetCameraEye(XMFLOAT3(0.0, 0.0, -300));
 	// 이 작업 이후 바로 gpu 명령이 끝나길 기다린다.
 	m_vMeshes.push_back(std::make_shared<CDiffusedSquareMesh>(pd3dDevice, pd3dCommandList, RED, true, 1270.0f, 710.0f));
 	m_vGameObjects.push_back(std::make_unique<CWallObject>(pd3dDevice));
