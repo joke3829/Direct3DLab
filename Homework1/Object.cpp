@@ -124,7 +124,6 @@ void CGameObject::CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dSRVD.Texture2D.ResourceMinLODClamp = 0.0f;
 	d3dSRVD.Texture2D.PlaneSlice = 0;
 
-	int n = m_pMaterial.use_count();
 
 	pd3dDevice->CreateShaderResourceView(m_pMaterial->getTexture().Get(), &d3dSRVD, d3dCPUDescriptorHandle);
 }
@@ -135,11 +134,66 @@ void CGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dComm
 	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
 }
 
-void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
 {
 	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
 	SetShaderVariables(pd3dCommandList);
+	if (m_pShader && m_pShader != currentSetShader) {
+		m_pShader->SetPipelineState(pd3dCommandList);
+		currentSetShader = m_pShader;
+	}
 	if (m_pMesh) {
 		m_pMesh->Render(pd3dCommandList);
 	}
+}
+
+//==========================================================================================
+
+void CTerrainObject::CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC d3dDHD;
+	d3dDHD.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	d3dDHD.NodeMask = 0;
+	d3dDHD.NumDescriptors = 3;
+	d3dDHD.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	pd3dDevice->CreateDescriptorHeap(&d3dDHD, __uuidof(ID3D12DescriptorHeap), (void**)m_pd3dCbvSrvDescriptor.GetAddressOf());
+}
+
+void CTerrainObject::CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice)
+{
+	CreateDescriptorHeap(pd3dDevice);
+	UINT nIncreamentSize = pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUDescriptorHandle = m_pd3dCbvSrvDescriptor->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC d3dCBVD;
+	d3dCBVD.BufferLocation = m_pd3dWorldBuffer->GetGPUVirtualAddress();
+	d3dCBVD.SizeInBytes = (sizeof(m_xmf4x4World) + 255) & ~255;
+	pd3dDevice->CreateConstantBufferView(&d3dCBVD, d3dCPUDescriptorHandle);
+	d3dCPUDescriptorHandle.ptr += nIncreamentSize;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC d3dSRVD;
+	D3D12_RESOURCE_DESC d3dRD = m_pMaterial->getTexture()->GetDesc();
+	d3dSRVD.Format = d3dRD.Format;
+	d3dSRVD.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	d3dSRVD.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	d3dSRVD.Texture2D.MipLevels = -1;
+	d3dSRVD.Texture2D.MostDetailedMip = 0;
+	d3dSRVD.Texture2D.ResourceMinLODClamp = 0.0f;
+	d3dSRVD.Texture2D.PlaneSlice = 0;
+
+
+	pd3dDevice->CreateShaderResourceView(m_pMaterial->getTexture().Get(), &d3dSRVD, d3dCPUDescriptorHandle);
+	d3dCPUDescriptorHandle.ptr += nIncreamentSize;
+
+	d3dRD = m_pMaterial2->getTexture()->GetDesc();
+	d3dSRVD.Format = d3dRD.Format;
+
+	pd3dDevice->CreateShaderResourceView(m_pMaterial2->getTexture().Get(), &d3dSRVD, d3dCPUDescriptorHandle);
+	
+}
+
+void CTerrainObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
 }

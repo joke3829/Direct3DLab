@@ -45,6 +45,19 @@ protected:
 	XMFLOAT2 m_xmf2uv;
 };
 
+class TerrainVertex : public Vertex {
+public:
+	TerrainVertex(XMFLOAT3 xmf3pos, XMFLOAT2 uv1, XMFLOAT2 uv2)
+		: Vertex(xmf3pos)
+	{
+		m_xmf2uv1 = uv1;
+		m_xmf2uv2 = uv2;
+	}
+protected:
+	XMFLOAT2 m_xmf2uv1;
+	XMFLOAT2 m_xmf2uv2;
+};
+
 //===========================================================================
 
 class CMesh {
@@ -63,6 +76,7 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dIndexUploadBuffer{ nullptr };
 	UINT m_nIndices;
 
+	D3D_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology;
 	// 바운딩 박스 추가 바람
 };
 
@@ -73,5 +87,28 @@ public:
 	//void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	std::vector<TexturedVertex> m_vVertices;
+	std::vector<UINT> m_vIndices;
+};
+
+//=============================================================================
+
+class CHeightMapImage {
+public:
+	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
+	float GetHeight(int x, int z);
+
+	std::unique_ptr<BYTE[]> m_pHeightMapPixels;
+
+	int m_nWidth;
+	int m_nLength;
+
+	XMFLOAT3 m_xmf3Scale;
+};
+
+class CHeightMapGridMesh : public CMesh {
+public:
+	CHeightMapGridMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::unique_ptr<CHeightMapImage>& pHeightMapImage);
+private:
+	std::vector<TerrainVertex> m_vVertices;
 	std::vector<UINT> m_vIndices;
 };

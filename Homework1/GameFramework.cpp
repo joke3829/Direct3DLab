@@ -187,7 +187,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
-		//OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
+		OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
 		break;
 	}
 	return 0;
@@ -201,13 +201,25 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
 			break;
+		case 'w':
+		case 'W':
+			m_pCamera->forward = true;
+			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 			break;
 		}
 		break;
 	case WM_KEYUP:
-		m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+		switch (wParam) {
+		case 'w':
+		case 'W':
+			m_pCamera->forward = false;
+			break;
+		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
+		}
 		break;
 	}
 }
@@ -218,13 +230,36 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM w
 	case 메인메뉴:
 		switch (nMessage) {
 		case WM_LBUTTONDOWN:
+			m_pCamera->UpdateProjMatrix();
 			m_pScene.reset();
-			//m_pScene = std::unique_ptr<>
-			m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+			m_pScene = std::make_unique<CIngameScene>();
+			m_pScene->SetCamera(m_pCamera);
+			BuildObject();
+			m_pCamera->SetCameraEye(XMFLOAT3(0.0, 50.0, 0.0));
+			m_nProgramState = 인게임;
+			ClientCenter.x = 640; ClientCenter.y = 360;
+			ClientToScreen(hWnd, &ClientCenter);
+			SetCursorPos(ClientCenter.x, ClientCenter.y);
 			break;
 		}
 		break;
 	case 인게임:
+		switch (nMessage) {
+		case WM_MOUSEMOVE: {
+			POINT currentCursor;
+			GetCursorPos(&currentCursor);
+			int cxDelta = currentCursor.x - ClientCenter.x;
+			int cyDelta = currentCursor.y - ClientCenter.y;
+			m_pCamera->Rotate(cxDelta, cyDelta);
+			SetCursorPos(ClientCenter.x, ClientCenter.y);
+			break;
+		}
+		case WM_LBUTTONDOWN:
+			break;
+		case WM_LBUTTONUP:
+			
+			break;
+		}
 		break;
 	}
 }
@@ -237,6 +272,7 @@ void CGameFramework::WaitForGPUComplete()
 		m_pd3dFence->SetEventOnCompletion(m_nFenceValue, m_hFenceEvent);
 		::WaitForSingleObject(m_hFenceEvent, INFINITE);
 	}
+
 }
 
 void CGameFramework::FrameAdvance()
@@ -266,7 +302,9 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandleD, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dCPUHandle, TRUE, &d3dCPUHandleD);
-
+	//====================================
+	m_pCamera->move();
+	//=====================================
 	// 렌더링 코드
 	m_pScene->Render(m_pd3dCommandList);
 

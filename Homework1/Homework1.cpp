@@ -55,7 +55,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 		else
-			GameFramework.FrameAdvance();
+            GameFramework.FrameAdvance();
 	}
 	GameFramework.Release();
 

@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "Mesh.h"
 
 class CScene {
 public:
@@ -21,6 +22,8 @@ public:
 protected:
 	ComPtr<ID3D12RootSignature> m_pd3dRootSignature{ nullptr };
 	std::shared_ptr<CCamera> m_pCamera;
+
+	std::shared_ptr<CShader> m_pCurrentSetShader{ nullptr };	// 현재 pipeline에 set돼있는 pipelineState를 저장
 };
 
 class CMenuScene : public CScene {
@@ -31,16 +34,17 @@ public:
 
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
-	std::vector<std::unique_ptr<CShader>> m_vShaders;
+	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
+	bool m_bOnExplain{ false };
 };
 
 class CIngameScene : public CScene {
 public:
 	void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
-	std::vector<std::unique_ptr<CShader>> m_vShaders;
+	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 };

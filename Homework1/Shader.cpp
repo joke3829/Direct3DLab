@@ -163,62 +163,48 @@ void CMenuShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<I
 	delete[] d3dPipelineState.InputLayout.pInputElementDescs;
 }
 
-void CMenuShader::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+
+//==========================================================================
+
+D3D12_INPUT_LAYOUT_DESC CTerrainShader::CreateInputLayout()
 {
-	std::shared_ptr<CSingleTexture> pSingle = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main.jpg", false);
-	std::shared_ptr<CMesh> pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 1280, 720);
+	D3D12_INPUT_ELEMENT_DESC* pd3dIE = new D3D12_INPUT_ELEMENT_DESC[3];
+	pd3dIE[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dIE[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dIE[2] = { "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 
-	m_vObjects.reserve(2);
-	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));	// 메인
-	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));	// 설명창
-
-	// 메시와 텍스쳐 지정
-	m_vObjects[0]->SetMaterial(pSingle);
-	m_vObjects[0]->SetMesh(pMesh);
-
-	pSingle.reset(); pMesh.reset();
-	pSingle = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main2.jpg", false);
-	pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 960, 540);
-
-	m_vObjects[1]->SetMaterial(pSingle);
-	m_vObjects[1]->SetMesh(pMesh);
-	m_vObjects[1]->SetPosition(XMFLOAT3(0.0, 0.0, -0.5));
-
-	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
-		temp->CreateResourceView(pd3dDevice);
-	}
+	D3D12_INPUT_LAYOUT_DESC d3dILDesc;
+	d3dILDesc.pInputElementDescs = pd3dIE;
+	d3dILDesc.NumElements = 3;
+	return d3dILDesc;
 }
 
-void CMenuShader::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lPAram)
+void CTerrainShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature)
 {
-	switch (nMessage) {
-	case WM_KEYDOWN:
-		switch (wParam) {
-		case 'm':
-		case 'M':
-			if (m_bOnExplain)
-				m_bOnExplain = false;
-			else
-				m_bOnExplain = true;
-			break;
-		}
-		break;
-	case WM_KEYUP:
-		break;
-	}
-}
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState;
+	::ZeroMemory(&d3dPipelineState, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = pd3dRootSignature.Get();
+	d3dPipelineState.InputLayout = CreateInputLayout();
+	d3dPipelineState.DepthStencilState = CreateDepthStencilDesc();
+	d3dPipelineState.RasterizerState = CreateRasterizerDesc();
+	d3dPipelineState.BlendState = CreateBlendDesc();
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+	d3dPipelineState.VS = CreateShaderFromFile(L"Shader.hlsl", "VSTerrain", "vs_5_1", &pd3dVBlob);
+	d3dPipelineState.PS = CreateShaderFromFile(L"Shader.hlsl", "PSTerrain", "ps_5_1", &pd3dPBlob);
+	pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineState, __uuidof(ID3D12PipelineState), (void**)m_pd3dPipelineState.GetAddressOf());
 
-void CMenuShader::SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
-{
-	pd3dCommandList->SetPipelineState(m_pd3dPipelineState.Get());
-}
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
 
-void CMenuShader::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
-{
-	/*for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
-		temp->Render(pd3dCommandList);
-	}*/
-	m_vObjects[0]->Render(pd3dCommandList);
-	if (m_bOnExplain)
-		m_vObjects[1]->Render(pd3dCommandList);
+	delete[] d3dPipelineState.InputLayout.pInputElementDescs;
 }

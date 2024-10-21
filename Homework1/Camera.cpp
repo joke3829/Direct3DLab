@@ -22,6 +22,7 @@ void CCamera::UpdateViewMatrix()
 	if (m_bThirdPerson) {
 		// 오브젝트의 포지션을 받아 오프셋을 더해 eye를 구한다.
 	}
+	//XMStoreFloat3(&m_xmf3Dir, XMVector3Normalize(XMLoadFloat3(&m_xmf3Dir)));
 	XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
 	XMStoreFloat4x4(&(m_cameraInfo.xmf4x4View), XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
 	m_cInfoBegin->xmf3Eye = m_xmf3Eye;
@@ -55,4 +56,24 @@ void CCamera::SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dC
 {
 	pd3dCommandList->RSSetViewports(1, &m_d3dViewport);
 	pd3dCommandList->RSSetScissorRects(1, &m_d3dScissorRect);
+}
+
+void CCamera::Rotate(int cxDelta, int cyDelta)
+{
+	float cx = (float)cxDelta / 3.0f;
+	float cy = (float)cyDelta / 3.0f;
+
+	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
+	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+
+	XMVECTOR xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir));
+	mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
+
+	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+}
+
+void CCamera::move()
+{
+	if (forward)
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir)));
 }

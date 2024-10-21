@@ -72,8 +72,15 @@ cbuffer shInfo : register(b3)
 {
     float1 sh;
 }
+// 지형 월드
+cbuffer TerrainInfo : register(b4)
+{
+    matrix gmtxTerrainWorld : packoffset(c0);
+}
 
 Texture2D gtxtTexture : register(t0);
+Texture2D gTerrainBaseTexture : register(t1);
+Texture2D gTerrainDetailTexture : register(t2);
 sampler gStaticSampler : register(s0);
 
 //==================================================
@@ -120,4 +127,39 @@ VS_Diffused_OUTPUT VSDiffused(VS_Diffused_INPUT input)
 float4 PSDiffused(VS_Diffused_OUTPUT input) : SV_TARGET
 {
     return input.color;
+}
+
+//====================================
+
+struct VS_TERRAIN_INPUT
+{
+    float3 position : POSITION;
+    float2 uv1 : TEXCOORD0;
+    float2 uv2 : TEXCOORD1;
+};
+
+struct VS_TERRAIN_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float2 uv1 : TEXCOORD0;
+    float2 uv2 : TEXCOORD1;
+};
+
+VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
+{
+    VS_TERRAIN_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxTerrainWorld), gmtxView), gmtxProj);
+    //output.position = mul(float4(input.position, 1.0f), gmtxView);
+    output.uv1 = input.uv1;
+    output.uv2 = input.uv2;
+    return output;
+}
+
+float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
+{
+    float4 baseColor = gTerrainBaseTexture.Sample(gStaticSampler, input.uv1);
+    float4 detailColor = gTerrainDetailTexture.Sample(gStaticSampler, input.uv2);
+    
+    return saturate((baseColor * 0.7) + (detailColor * 0.3));
+
 }

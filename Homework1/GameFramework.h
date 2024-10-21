@@ -67,5 +67,7 @@ private:
 
 	std::unique_ptr<CScene> m_pScene;
 	ProgramState m_nProgramState;
+
+	POINT ClientCenter;
 };
 

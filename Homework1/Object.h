@@ -5,6 +5,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Mesh.h"
+#include "Shader.h"
 #include "DDSTextureLoader12.h"
 #include "WICTextureLoader12.h"
 
@@ -36,6 +37,12 @@ public:
 	{
 		m_pMesh = pMesh;
 	}
+
+	template<class T>
+	void SetShader(std::shared_ptr<T>& pShader)
+	{
+		m_pShader = pShader;
+	}
 	void SetMaterial(std::shared_ptr<CSingleTexture>& pMaterial)
 	{
 		m_pMaterial = pMaterial;
@@ -44,9 +51,10 @@ public:
 	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
 	virtual void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 	
-	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
 	std::shared_ptr<CMesh> m_pMesh{ nullptr };
+	std::shared_ptr<CShader> m_pShader{ nullptr };
 	std::shared_ptr<CSingleTexture> m_pMaterial{ nullptr };
 
 	XMFLOAT4X4 m_xmf4x4World;
@@ -55,3 +63,25 @@ protected:
 
 	ComPtr<ID3D12DescriptorHeap> m_pd3dCbvSrvDescriptor;
 };
+
+//==========================================================================================
+
+class CTerrainObject : public CGameObject {
+public:
+	CTerrainObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+		: CGameObject(pd3dDevice, pd3dCommandList) {}
+
+	void SetMaterial2(std::shared_ptr<CSingleTexture>& pMaterial)
+	{
+		m_pMaterial2 = pMaterial;
+	}
+
+	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
+	virtual void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+private:
+	std::shared_ptr<CSingleTexture> m_pMaterial2{ nullptr };
+};
+
+//==========================================================================================

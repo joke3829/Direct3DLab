@@ -15,9 +15,14 @@ public:
 	virtual void UpdateProjMatrix(bool bOrtho = false);
 	virtual void UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
+	void Rotate(int cxDelta, int cyDelta);
+	void move();
+
 	void SetCameraEye(XMFLOAT3 xmf3Eye);
 
 	void SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	bool forward = false;
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget{ nullptr };
@@ -40,6 +45,7 @@ protected:
 	float m_fAspect = 1280.0f / 720.0f;
 	float m_fNear = 1.0f;
 	float m_fFar = 500.0f;
+
 
 	// ∫‰ «¡∑ØΩ∫≈“ √ﬂ∞°«œ¿⁄
 };
