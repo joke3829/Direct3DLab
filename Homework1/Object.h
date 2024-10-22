@@ -85,3 +85,14 @@ private:
 };
 
 //==========================================================================================
+
+class CSkyBoxObject {
+public:
+	CSkyBoxObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	void UpdatePosition(XMFLOAT3 pos);
+
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+private:
+	std::vector<std::unique_ptr<CGameObject>> m_vPlanes;
+};

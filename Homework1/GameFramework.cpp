@@ -203,7 +203,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 			break;
 		case 'w':
 		case 'W':
-			m_pCamera->forward = true;
+			//m_pCamera->forward = true;
 			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
@@ -214,7 +214,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		switch (wParam) {
 		case 'w':
 		case 'W':
-			m_pCamera->forward = false;
+			//m_pCamera->forward = false;
 			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
@@ -275,9 +275,20 @@ void CGameFramework::WaitForGPUComplete()
 
 }
 
+void CGameFramework::ProcessInput()
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->move();
+}
+
 void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(FIXED_FRAME_RATE);
+
+	ProcessInput();
 
 	m_pd3dCommandAllocator->Reset();
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
@@ -303,7 +314,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dCPUHandle, TRUE, &d3dCPUHandleD);
 	//====================================
-	m_pCamera->move();
+	//m_pCamera->move();
 	//=====================================
 	// ·»´õ¸µ ÄÚµå
 	m_pScene->Render(m_pd3dCommandList);

@@ -47,3 +47,12 @@ public:
 
 	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 };
+
+class CSkyBoxShader : public CShader {
+public:
+	CSkyBoxShader() {}
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
+	
+};

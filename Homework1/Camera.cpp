@@ -74,6 +74,11 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 
 void CCamera::move()
 {
-	if (forward)
+	//if (forward)
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir)));
+}
+
+XMFLOAT3 CCamera::getCameraEye() const
+{
+	return m_xmf3Eye;
 }

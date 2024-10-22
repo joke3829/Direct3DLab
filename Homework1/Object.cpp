@@ -197,3 +197,65 @@ void CTerrainObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dC
 	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
 	pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
 }
+
+//=========================================================
+
+CSkyBoxObject::CSkyBoxObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12RootSignature>& pd3dRootSignature)
+{
+	m_vPlanes.reserve(6);
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vPlanes.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+
+	std::shared_ptr<CShader> pShader = std::make_shared<CSkyBoxShader>();
+	pShader->CreatePipelineState(pd3dDevice, pd3dRootSignature);
+	m_vPlanes[0]->SetShader(pShader);
+	m_vPlanes[1]->SetShader(pShader);
+	m_vPlanes[2]->SetShader(pShader);
+	m_vPlanes[3]->SetShader(pShader);
+	m_vPlanes[4]->SetShader(pShader);
+	m_vPlanes[5]->SetShader(pShader);
+
+	std::shared_ptr<CMesh> pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 좌);
+	std::shared_ptr<CSingleTexture> pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Left_0.dds", true);
+	m_vPlanes[0]->SetMaterial(pMaterial); m_vPlanes[0]->SetMesh(pMesh);
+
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 우);
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Right_0.dds", true);
+	m_vPlanes[1]->SetMaterial(pMaterial); m_vPlanes[1]->SetMesh(pMesh);
+
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 앞);
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Front_0.dds", true);
+	m_vPlanes[2]->SetMaterial(pMaterial); m_vPlanes[2]->SetMesh(pMesh);
+
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 뒤);
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Back_0.dds", true);
+	m_vPlanes[3]->SetMaterial(pMaterial); m_vPlanes[3]->SetMesh(pMesh);
+
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 상);
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Top_0.dds", true);
+	m_vPlanes[4]->SetMaterial(pMaterial); m_vPlanes[4]->SetMesh(pMesh);
+
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 하);
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Bottom_0.dds", true);
+	m_vPlanes[5]->SetMaterial(pMaterial); m_vPlanes[5]->SetMesh(pMesh);
+
+	for (int i = 0; i < 6; ++i) {
+		m_vPlanes[i]->CreateResourceView(pd3dDevice);
+	}
+}
+
+void CSkyBoxObject::UpdatePosition(XMFLOAT3 pos) {
+	for (int i = 0; i < 6; ++i) {
+		m_vPlanes[i]->SetPosition(pos);
+	}
+}
+
+void CSkyBoxObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+{
+	for (int i = 0; i < 6; ++i)
+		m_vPlanes[i]->Render(pd3dCommandList, currentSetShader);
+}

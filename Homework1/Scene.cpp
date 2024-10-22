@@ -100,11 +100,11 @@ void CMenuScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 
 	std::shared_ptr<CShader> pShader = std::make_shared<CMenuShader>();
 	pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
-	std::shared_ptr<CMesh> pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 1280, 720);
+	std::shared_ptr<CMesh> pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 1280, 720);
 	std::shared_ptr<CSingleTexture> pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main.jpg", false);
 
 	m_vObjects[0]->SetMesh(pMesh); m_vObjects[0]->SetShader(pShader); m_vObjects[0]->SetMaterial(pMaterial);
-	pMesh = std::make_shared<CTexturedSqureMesh>(pd3dDevice, pd3dCommandList, 960, 540);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 960, 540);
 	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\main2.jpg", false);
 	m_vObjects[1]->SetMesh(pMesh); m_vObjects[1]->SetShader(pShader); m_vObjects[1]->SetMaterial(pMaterial);
 
@@ -170,6 +170,8 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
 	}
+
+	m_pSkyBox = std::make_unique<CSkyBoxObject>(pd3dDevice, pd3dCommandList, m_pd3dRootSignature);
 }
 
 void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
@@ -182,4 +184,7 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
+	
+	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
+	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
 }

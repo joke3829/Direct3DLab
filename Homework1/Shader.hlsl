@@ -163,3 +163,20 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
     return saturate((baseColor * 0.7) + (detailColor * 0.3));
 
 }
+
+//=====================================
+
+VS_NLightTextured_OUTPUT VSSkyBox(VS_NLightTextred_INPUT input)
+{
+    VS_NLightTextured_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+    output.uv = input.uv;
+    output.position.w = output.position.z;
+    
+    return output;
+}
+
+float4 PSSkyBox(VS_NLightTextured_OUTPUT input) : SV_TARGET
+{
+    return gtxtTexture.Sample(gStaticSampler, input.uv);
+}

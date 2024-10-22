@@ -19,8 +19,9 @@ public:
 	void move();
 
 	void SetCameraEye(XMFLOAT3 xmf3Eye);
-
 	void SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	XMFLOAT3 getCameraEye() const;
 
 	bool forward = false;
 protected:
@@ -41,7 +42,7 @@ protected:
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f ,1.0f }; // Eye에 해당 방향을 더해 At을 구한다.
 	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, 0.0f };	// 3인칭 카메라일 때 사용
 
-	float m_fFOV = 90.0f;
+	float m_fFOV = 60.0f;
 	float m_fAspect = 1280.0f / 720.0f;
 	float m_fNear = 1.0f;
 	float m_fFar = 500.0f;

@@ -25,6 +25,8 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+	void ProcessInput();
+
 	void WaitForGPUComplete();
 	void FrameAdvance();		// RenderÇÔ¼ö
 

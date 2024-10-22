@@ -47,4 +47,5 @@ public:
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
+	std::unique_ptr<CSkyBoxObject> m_pSkyBox;
 };

@@ -5,6 +5,10 @@
 #pragma once
 #include "stdafx.h"
 
+enum 방향 {
+	좌, 우, 앞, 뒤, 상, 하
+};
+
 class Vertex {	// 좌표만 가진 정점
 public:
 	Vertex(XMFLOAT3 xmf3pos) : m_xmf3Position{ xmf3pos } {};	// 생성과 동시에 초기화
@@ -80,9 +84,10 @@ protected:
 	// 바운딩 박스 추가 바람
 };
 
-class CTexturedSqureMesh : public CMesh {
+class CTexturedSquareMesh : public CMesh {
 public:
-	CTexturedSqureMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width = 1.0f, float height = 1.0f);
+	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width = 1.0f, float height = 1.0f);
+	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, 방향 arrow);
 
 	//void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
