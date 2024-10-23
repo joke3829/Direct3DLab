@@ -174,6 +174,15 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_pSkyBox = std::make_unique<CSkyBoxObject>(pd3dDevice, pd3dCommandList, m_pd3dRootSignature);
 }
 
+void CIngameScene::ProcessInput()
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->move();
+}
+
 void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
 	m_pCurrentSetShader.reset();
@@ -188,3 +197,4 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
 	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
 }
+

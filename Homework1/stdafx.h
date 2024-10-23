@@ -33,6 +33,7 @@
 #include <timeapi.h>
 #include <vector>
 #include <memory>
+#include <fstream>
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;

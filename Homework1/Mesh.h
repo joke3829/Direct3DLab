@@ -82,6 +82,9 @@ protected:
 
 	D3D_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology;
 	// ¹Ù¿îµù ¹Ú½º Ãß°¡ ¹Ù¶÷
+
+	XMFLOAT3 m_obbCenter;
+	XMFLOAT3 m_obbExtent;
 };
 
 class CTexturedSquareMesh : public CMesh {
@@ -116,4 +119,33 @@ public:
 private:
 	std::vector<TerrainVertex> m_vVertices;
 	std::vector<UINT> m_vIndices;
+};
+
+
+class HMesh : public CMesh {
+public:
+	HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile);
+protected:
+	// tex0
+	D3D12_VERTEX_BUFFER_VIEW m_d3dTex0BufferView;
+	ComPtr<ID3D12Resource> m_pd3dTex0Buffer{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dTex0UploadBuffer{ nullptr };
+	UINT m_nTex0;
+	// ³ë¸»
+	D3D12_VERTEX_BUFFER_VIEW m_d3dNormalBufferView;
+	ComPtr<ID3D12Resource> m_pd3dNormalBuffer{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dNormalUploadBuffer{ nullptr };
+	UINT m_nNormal;
+	// ÅºÁ¨Æ®
+	D3D12_VERTEX_BUFFER_VIEW m_d3dTangentBufferView;
+	ComPtr<ID3D12Resource> m_pd3dTangentBuffer{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dTangentUploadBuffer{ nullptr };
+	UINT m_nTangent;
+	// ¹ÙÀÌÅºÁ¨Æ®
+	D3D12_VERTEX_BUFFER_VIEW m_d3dBiTangentBufferView;
+	ComPtr<ID3D12Resource> m_pd3dBiTangentBuffer{ nullptr };
+	ComPtr<ID3D12Resource> m_pd3dBiTangentUploadBuffer{ nullptr };
+	UINT m_nBiTangent;
+	
+	// SubMeshes(ÀÎµ¦½º °³¼ö)
 };

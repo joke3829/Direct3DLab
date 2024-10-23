@@ -199,3 +199,114 @@ CHeightMapGridMesh::CHeightMapGridMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<
 	m_nVertices = m_vVertices.size();
 	m_nIndices = m_vIndices.size();
 }
+
+//=========================================================================
+
+HMesh::HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile)
+{
+	char nStrLength{};
+	std::string str;
+
+	UINT nFactor{};	// 해당 요소의 개수
+	inFile.read((char*)&nFactor, sizeof(int));
+
+	// 메시의 이름
+	inFile.read(&nStrLength, sizeof(char));
+	str.assign(nStrLength, ' ');
+	inFile.read(str.data(), nStrLength);
+
+	// 여기서부터
+	while (1) {
+		inFile.read(&nStrLength, sizeof(char));
+		str.assign(nStrLength, ' ');
+		inFile.read(str.data(), nStrLength);
+		if ("<Bounds>:" == str) {
+			inFile.read((char*)&m_obbCenter, sizeof(XMFLOAT3));
+			inFile.read((char*)&m_obbExtent, sizeof(XMFLOAT3));
+		}
+		else if ("<Positions>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+			std::vector<XMFLOAT3> positions;
+			positions.assign(nFactor, XMFLOAT3(0.0, 0.0, 0.0));
+			inFile.read((char*)positions.data(), sizeof(XMFLOAT3) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dVertexUploadBuffer, positions, m_pd3dVertexBuffer);
+			m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+			m_d3dVertexBufferView.SizeInBytes = sizeof(XMFLOAT3) * nFactor;
+			m_d3dVertexBufferView.StrideInBytes = sizeof(XMFLOAT3);
+			m_nVertices = nFactor;
+		}
+		else if ("<Colors>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+		}
+		else if ("<TextureCoords0>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+			std::vector<XMFLOAT2> uv;
+			uv.assign(nFactor, XMFLOAT2(0.0, 0.0));
+			inFile.read((char*)uv.data(), sizeof(XMFLOAT2) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dTex0UploadBuffer, uv, m_pd3dTex0Buffer);
+			m_d3dTex0BufferView.BufferLocation = m_pd3dTex0Buffer->GetGPUVirtualAddress();
+			m_d3dTex0BufferView.SizeInBytes = sizeof(XMFLOAT2) * nFactor;
+			m_d3dTex0BufferView.StrideInBytes = sizeof(XMFLOAT2);
+			m_nTex0 = nFactor;
+		}
+		else if ("<TextureCoords1>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+		}
+		else if ("<Normals>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+			std::vector<XMFLOAT3> normals;
+			normals.assign(nFactor, XMFLOAT3(0.0, 0.0, 0.0));
+			inFile.read((char*)normals.data(), sizeof(XMFLOAT3) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dNormalUploadBuffer, normals, m_pd3dNormalBuffer);
+			m_d3dNormalBufferView.BufferLocation = m_pd3dNormalBuffer->GetGPUVirtualAddress();
+			m_d3dNormalBufferView.SizeInBytes = sizeof(XMFLOAT3) * nFactor;
+			m_d3dNormalBufferView.StrideInBytes = sizeof(XMFLOAT3);
+			m_nNormal = nFactor;
+		}
+		else if ("<Tangents>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+			std::vector<XMFLOAT3> tang;
+			tang.assign(nFactor, XMFLOAT3(0.0, 0.0, 0.0));
+			inFile.read((char*)tang.data(), sizeof(XMFLOAT3) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dTangentUploadBuffer, tang, m_pd3dTangentBuffer);
+			m_d3dTangentBufferView.BufferLocation = m_pd3dTangentBuffer->GetGPUVirtualAddress();
+			m_d3dTangentBufferView.SizeInBytes = sizeof(XMFLOAT3) * nFactor;
+			m_d3dTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
+			m_nTangent = nFactor;
+		}
+		else if ("<BiTangents>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+			std::vector<XMFLOAT3> bitang;
+			bitang.assign(nFactor, XMFLOAT3(0.0, 0.0, 0.0));
+			inFile.read((char*)bitang.data(), sizeof(XMFLOAT3) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dBiTangentUploadBuffer, bitang, m_pd3dBiTangentBuffer);
+			m_d3dBiTangentBufferView.BufferLocation = m_pd3dBiTangentBuffer->GetGPUVirtualAddress();
+			m_d3dBiTangentBufferView.SizeInBytes = sizeof(XMFLOAT3) * nFactor;
+			m_d3dBiTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
+			m_nBiTangent = nFactor;
+		}
+		else if ("<SubMeshes>:" == str) {
+			inFile.read((char*)&nFactor, sizeof(int));
+
+			inFile.read(&nStrLength, sizeof(char));
+			str.assign(nStrLength, ' ');
+			inFile.read(str.data(), nStrLength);
+
+			inFile.read((char*)&nFactor, sizeof(int));
+			// 인덱스 개수
+			inFile.read((char*)&nFactor, sizeof(int));
+
+			std::vector<UINT> index;
+			index.assign(nFactor, 0);
+			inFile.read((char*)index.data(), sizeof(UINT) * nFactor);
+			CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dIndexUploadBuffer, index, m_pd3dIndexBuffer);
+			m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
+			m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+			m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * nFactor;
+			m_nIndices = nFactor;
+		}
+		else if ("</Mesh>") {
+			break;
+		}
+	}
+}

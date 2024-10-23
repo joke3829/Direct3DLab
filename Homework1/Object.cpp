@@ -259,3 +259,169 @@ void CSkyBoxObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, s
 	for (int i = 0; i < 6; ++i)
 		m_vPlanes[i]->Render(pd3dCommandList, currentSetShader);
 }
+
+
+//====================================================
+
+HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile, std::unique_ptr<HGameObject>& pSibling, bool bSbiling)
+	: CGameObject(pd3dDevice, pd3dCommandList)
+{
+	char nStrLength{};
+	std::string str{};
+
+	inFile.read(&nStrLength, sizeof(char));
+	str.assign(nStrLength, ' ');
+	inFile.read(str.data(), nStrLength);
+
+	if ("<Frame>:" == str) {
+		int nFrame{};
+		int nTextures{};
+		inFile.read((char*)&nFrame, sizeof(int));
+		inFile.read((char*)&nTextures, sizeof(int));
+		inFile.read(&nStrLength, sizeof(char));
+		str.assign(nStrLength, ' ');
+		inFile.read(str.data(), nStrLength);
+		while (1) {
+			inFile.read(&nStrLength, sizeof(char));
+			str.assign(nStrLength, ' ');
+			inFile.read(str.data(), nStrLength);
+			if ("<Transform>:" == str) {
+				XMFLOAT3 pos, rot, scale;
+				XMFLOAT4 qu;
+				inFile.read((char*)&pos, sizeof(XMFLOAT3));
+				inFile.read((char*)&rot, sizeof(XMFLOAT3));
+				inFile.read((char*)&scale, sizeof(XMFLOAT3));
+				inFile.read((char*)&qu, sizeof(XMFLOAT4));
+			}
+			else if ("<TransformMatrix>:" == str) {
+				inFile.read((char*)&m_xmf4x4World, sizeof(XMFLOAT4X4));
+			}
+			else if ("<Mesh>:" == str) {
+				std::shared_ptr<CMesh> pMesh = std::make_shared<HMesh>(pd3dDevice, pd3dCommandList, inFile);
+				m_pMesh = pMesh;
+			}
+			else if ("<Materials>:" == str) {
+				inFile.read((char*)&nTextures, sizeof(int));
+				m_vTextures.reserve(nTextures);
+				while (1) {
+					inFile.read(&nStrLength, sizeof(char));
+					str.assign(nStrLength, ' ');
+					inFile.read(str.data(), nStrLength);
+
+					if ("<Material>:" == str) {
+						int temp;
+						inFile.read((char*)&temp, sizeof(int));
+					}
+					else if ("<AlbedoColor>:" == str) {
+						XMFLOAT4 temp;
+						inFile.read((char*)&temp, sizeof(XMFLOAT4));
+					}
+					else if ("<EmissiveColor>:" == str) {
+						XMFLOAT4 temp;
+						inFile.read((char*)&temp, sizeof(XMFLOAT4));
+					}
+					else if ("<Glossiness>:" == str) {
+						float temp;
+						inFile.read((char*)&temp, sizeof(float));
+					}
+					else if ("<Metallic>:" == str) {
+						float temp;
+						inFile.read((char*)&temp, sizeof(float));
+					}
+					else if ("<SpecularHighlight>:" == str) {
+						float temp;
+						inFile.read((char*)&temp, sizeof(float));
+					}
+					else if ("<GlossyReflection>:" == str) {
+						float temp;
+						inFile.read((char*)&temp, sizeof(float));
+					}
+					else if ("<AlbedoMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+					else if ("<MerallicMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+					else if ("<NormalMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+					else if ("<EmissionMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+					else if ("<DetailAlbedoMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+					else if ("<DetailNormalMap>:" == str) {
+						inFile.read(&nStrLength, sizeof(char));
+						str.assign(nStrLength, ' ');
+						inFile.read(str.data(), nStrLength);
+						if (str != "null") {
+							if (str[0] == '@')
+								str.erase(0);
+							std::string filePath = "texture\\";
+							filePath = filePath + str + ".dds";
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+						}
+					}
+				}
+			}
+			else if ("<Children>:" == str) {
+				int nChild{};
+				inFile.read((char*)&nChild, sizeof(int));
+				if (nChild > 0) {
+					for (int i = 0; i < nChild; ++i) {
+						m_pChild = std::make_unique<HGameObject>(pd3dDevice , pd3dCommandList, inFile, )
+					}
+				}
+			}
+			else if ("</Frame>" == str) {
+				break;
+			}
+		}
+	}
+}

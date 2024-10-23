@@ -277,11 +277,7 @@ void CGameFramework::WaitForGPUComplete()
 
 void CGameFramework::ProcessInput()
 {
-	UCHAR keyBuffer[256];
-	GetKeyboardState(keyBuffer);
-
-	if (keyBuffer['W'] & 0x80)
-		m_pCamera->move();
+	m_pScene->ProcessInput();
 }
 
 void CGameFramework::FrameAdvance()

@@ -96,3 +96,15 @@ public:
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vPlanes;
 };
+
+//==============================================================
+
+class HGameObject : public CGameObject {
+public:
+	HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile, std::unique_ptr<HGameObject>& pSibling, bool bSbiling = false);
+protected:
+	std::vector<std::unique_ptr<CSingleTexture>> m_vTextures;	// 텍스쳐 배열
+
+	std::unique_ptr<HGameObject> m_pChild{ nullptr };
+	std::unique_ptr<HGameObject> m_pSibling{ nullptr };
+};

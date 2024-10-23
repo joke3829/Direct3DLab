@@ -286,7 +286,7 @@ CStandardShader::CStandardShader()
 }
 
 CStandardShader::~CStandardShader()
-{
+{ 
 }
 
 D3D12_INPUT_LAYOUT_DESC CStandardShader::CreateInputLayout()
