@@ -102,6 +102,13 @@ private:
 class HGameObject : public CGameObject {
 public:
 	HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile, std::unique_ptr<HGameObject>& pSibling, bool bSbiling = false);
+	// 셰이더 추가 필요
+	// 행렬 전송 필요(최고부모 행렬을 받아와서 곱해야한다.)
+
+	//virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
+
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
 	std::vector<std::unique_ptr<CSingleTexture>> m_vTextures;	// 텍스쳐 배열
 

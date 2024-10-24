@@ -345,7 +345,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 					else if ("<MerallicMap>:" == str) {
@@ -357,7 +357,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 					else if ("<NormalMap>:" == str) {
@@ -369,7 +369,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 					else if ("<EmissionMap>:" == str) {
@@ -381,7 +381,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 					else if ("<DetailAlbedoMap>:" == str) {
@@ -393,7 +393,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 					else if ("<DetailNormalMap>:" == str) {
@@ -405,7 +405,7 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, filePath.c_str(), true));
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
 						}
 					}
 				}
@@ -414,12 +414,19 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 				int nChild{};
 				inFile.read((char*)&nChild, sizeof(int));
 				if (nChild > 0) {
-					for (int i = 0; i < nChild; ++i) {
-						m_pChild = std::make_unique<HGameObject>(pd3dDevice , pd3dCommandList, inFile, )
+					std::unique_ptr<HGameObject> pNull{ nullptr };
+					std::unique_ptr<HGameObject> TempChild = std::make_unique<HGameObject>(pd3dDevice, pd3dCommandList, inFile, pNull);
+					for (int i = 1; i < nChild; ++i) {
+						std::unique_ptr<HGameObject> Childs = std::make_unique<HGameObject>(pd3dDevice, pd3dCommandList, inFile, TempChild, true);
+						TempChild.reset(Childs.release());
 					}
+					m_pChild.reset(TempChild.release());
 				}
 			}
 			else if ("</Frame>" == str) {
+				if (bSbiling) {
+					m_pSibling.reset(pSibling.release());
+				}
 				break;
 			}
 		}
