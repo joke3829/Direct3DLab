@@ -56,3 +56,11 @@ public:
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 	
 };
+
+class CPlayerShader : public CShader {
+public:
+	CPlayerShader() {}
+	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};

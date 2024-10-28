@@ -266,6 +266,7 @@ void CSkyBoxObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, s
 HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile, std::unique_ptr<HGameObject>& pSibling, bool bSbiling)
 	: CGameObject(pd3dDevice, pd3dCommandList)
 {
+	XMStoreFloat4x4(&m_xmf4x4Parent, XMMatrixIdentity());
 	char nStrLength{};
 	std::string str{};
 
@@ -342,13 +343,15 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 						inFile.read(str.data(), nStrLength);
 						if (str != "null") {
 							if (str[0] == '@')
-								str.erase(0);
+								str.erase(str.begin(), str.begin() + 1);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
-					else if ("<MerallicMap>:" == str) {
+					else if ("<MetallicMap>:" == str) {
 						inFile.read(&nStrLength, sizeof(char));
 						str.assign(nStrLength, ' ');
 						inFile.read(str.data(), nStrLength);
@@ -357,7 +360,9 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
 					else if ("<NormalMap>:" == str) {
@@ -369,7 +374,9 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
 					else if ("<EmissionMap>:" == str) {
@@ -381,7 +388,9 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
 					else if ("<DetailAlbedoMap>:" == str) {
@@ -393,7 +402,9 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
 					else if ("<DetailNormalMap>:" == str) {
@@ -405,9 +416,13 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 								str.erase(0);
 							std::string filePath = "texture\\";
 							filePath = filePath + str + ".dds";
-							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, (const wchar_t*)filePath.c_str(), true));
+							std::wstring wstr;
+							wstr.assign(filePath.begin(), filePath.end());
+							m_vTextures.push_back(std::make_unique<CSingleTexture>(pd3dDevice, pd3dCommandList, wstr.c_str(), true));
 						}
 					}
+					else if("</Materials>" == str)
+						break;
 				}
 			}
 			else if ("<Children>:" == str) {
@@ -430,5 +445,100 @@ HGameObject::HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Graphics
 				break;
 			}
 		}
+	}
+}
+
+void HGameObject::setShader(std::shared_ptr<CShader>& pShader)
+{
+	if (m_pChild)
+		m_pChild->setShader(pShader);
+
+	m_pShader = pShader;
+
+	if (m_pSibling)
+		m_pSibling->setShader(pShader);
+}
+
+void HGameObject::CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice)
+{
+	int nTexture = m_vTextures.size();
+	D3D12_DESCRIPTOR_HEAP_DESC d3dDHD;
+	d3dDHD.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	d3dDHD.NodeMask = 0;
+	d3dDHD.NumDescriptors = 1 + nTexture;
+	d3dDHD.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	pd3dDevice->CreateDescriptorHeap(&d3dDHD, __uuidof(ID3D12DescriptorHeap), (void**)m_pd3dCbvSrvDescriptor.GetAddressOf());
+}
+
+void HGameObject::CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice)
+{
+	if (m_pChild)
+		m_pChild->CreateResourceView(pd3dDevice);
+
+
+	CreateDescriptorHeap(pd3dDevice);
+	UINT nIncreamentSize = pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUDescriptorHandle = m_pd3dCbvSrvDescriptor->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC d3dCBVD;
+	d3dCBVD.BufferLocation = m_pd3dWorldBuffer->GetGPUVirtualAddress();
+	d3dCBVD.SizeInBytes = (sizeof(m_xmf4x4World) + 255) & ~255;
+	pd3dDevice->CreateConstantBufferView(&d3dCBVD, d3dCPUDescriptorHandle);
+	d3dCPUDescriptorHandle.ptr += nIncreamentSize;
+
+	for (int i = 0; i < m_vTextures.size(); ++i) {
+		D3D12_SHADER_RESOURCE_VIEW_DESC d3dSRVD;
+		D3D12_RESOURCE_DESC d3dRD = m_vTextures[i]->getTexture()->GetDesc();
+		d3dSRVD.Format = d3dRD.Format;
+		d3dSRVD.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		d3dSRVD.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		d3dSRVD.Texture2D.MipLevels = -1;
+		d3dSRVD.Texture2D.MostDetailedMip = 0;
+		d3dSRVD.Texture2D.ResourceMinLODClamp = 0.0f;
+		d3dSRVD.Texture2D.PlaneSlice = 0;
+
+
+		pd3dDevice->CreateShaderResourceView(m_vTextures[i]->getTexture().Get(), &d3dSRVD, d3dCPUDescriptorHandle);
+		d3dCPUDescriptorHandle.ptr += nIncreamentSize;
+	}
+
+	if (m_pSibling)
+		m_pSibling->CreateResourceView(pd3dDevice);
+}
+
+void HGameObject::setPMatrix(XMFLOAT4X4& xmf4x4Parent)
+{
+	m_xmf4x4Parent = xmf4x4Parent;
+}
+
+void HGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent)));
+	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
+}
+
+void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+{
+	if (m_pChild) {
+		XMFLOAT4X4 xmf4x4;
+		XMStoreFloat4x4(&xmf4x4, XMLoadFloat4x4(&m_xmf4x4World)* XMLoadFloat4x4(&m_xmf4x4Parent));
+		m_pChild->setPMatrix(xmf4x4);
+		m_pChild->Render(pd3dCommandList, currentSetShader);
+	}
+
+	// ·»´õ¸µ ÄÚµå
+	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
+	SetShaderVariables(pd3dCommandList);
+	if (m_pShader && m_pShader != currentSetShader) {
+		m_pShader->SetPipelineState(pd3dCommandList);
+		currentSetShader = m_pShader;
+	}
+	if (m_pMesh) {
+		m_pMesh->Render(pd3dCommandList);
+	}
+
+	if (m_pSibling) {
+		m_pSibling->setPMatrix(m_xmf4x4Parent);
+		m_pSibling->Render(pd3dCommandList, currentSetShader);
 	}
 }

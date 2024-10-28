@@ -204,6 +204,7 @@ CHeightMapGridMesh::CHeightMapGridMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<
 
 HMesh::HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile)
 {
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	char nStrLength{};
 	std::string str;
 
@@ -309,4 +310,18 @@ HMesh::HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>
 			break;
 		}
 	}
+}
+
+void HMesh::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
+	D3D12_VERTEX_BUFFER_VIEW d3dBuffers[5] =
+	{ m_d3dVertexBufferView, m_d3dTex0BufferView, m_d3dNormalBufferView, m_d3dTangentBufferView, m_d3dBiTangentBufferView };
+	pd3dCommandList->IASetVertexBuffers(0, 5, d3dBuffers);
+	if (m_pd3dIndexBuffer) {
+		pd3dCommandList->IASetIndexBuffer(&m_d3dIndexBufferView);
+		pd3dCommandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
+	}
+	else
+		pd3dCommandList->DrawInstanced(m_nVertices, 1, 0, 0);
 }

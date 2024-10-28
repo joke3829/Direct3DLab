@@ -103,10 +103,15 @@ class HGameObject : public CGameObject {
 public:
 	HGameObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile, std::unique_ptr<HGameObject>& pSibling, bool bSbiling = false);
 	// 셰이더 추가 필요
-	// 행렬 전송 필요(최고부모 행렬을 받아와서 곱해야한다.)
 
-	//virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
+	void setShader(std::shared_ptr<CShader>& pShader);
+
+	void setPMatrix(XMFLOAT4X4& xmf4x4Parent);
+
+	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
 	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
+
+	void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
@@ -114,4 +119,6 @@ protected:
 
 	std::unique_ptr<HGameObject> m_pChild{ nullptr };
 	std::unique_ptr<HGameObject> m_pSibling{ nullptr };
+
+	XMFLOAT4X4 m_xmf4x4Parent;
 };

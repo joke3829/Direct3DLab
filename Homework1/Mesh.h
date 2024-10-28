@@ -125,6 +125,8 @@ private:
 class HMesh : public CMesh {
 public:
 	HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile);
+
+	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	// tex0
 	D3D12_VERTEX_BUFFER_VIEW m_d3dTex0BufferView;

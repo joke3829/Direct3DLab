@@ -51,4 +51,5 @@ public:
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 	std::unique_ptr<CSkyBoxObject> m_pSkyBox;
+	std::unique_ptr<HGameObject> m_pPlayer;
 };

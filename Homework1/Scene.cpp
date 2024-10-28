@@ -166,10 +166,18 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	dynamic_cast<CTerrainObject*>(m_vObjects[0].get())->SetMaterial2(pMaterial);
 
 	// 추가할거 더 추가
+	std::ifstream inFile{ "model\\Mi24.bin", std::ios::binary };
+	std::unique_ptr<HGameObject> nullp{ nullptr };
+	m_pPlayer = std::make_unique<HGameObject>(pd3dDevice, pd3dCommandList, inFile, nullp);
+	pShader = std::make_shared<CPlayerShader>();
+	pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pPlayer->setShader(pShader);
+	m_pPlayer->SetPosition(XMFLOAT3(257.0, 100.0, 257.0));
 
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
 	}
+	m_pPlayer->CreateResourceView(pd3dDevice);
 
 	m_pSkyBox = std::make_unique<CSkyBoxObject>(pd3dDevice, pd3dCommandList, m_pd3dRootSignature);
 }
@@ -189,6 +197,8 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	pd3dCommandList->SetGraphicsRootSignature(m_pd3dRootSignature.Get());
 	m_pCamera->SetViewportAndScissorRect(pd3dCommandList);
 	m_pCamera->UpdateShaderVariables(pd3dCommandList);
+
+	m_pPlayer->Render(pd3dCommandList, m_pCurrentSetShader);
 
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
