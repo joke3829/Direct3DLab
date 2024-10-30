@@ -111,7 +111,12 @@ public:
 	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
 	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
 
+	void UpdateWorldMatrix();
 	void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	XMFLOAT3 getPosition() const;
+
+	void move(eDirection dir, float fElapsedTime);
 
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
@@ -121,4 +126,8 @@ protected:
 	std::unique_ptr<HGameObject> m_pSibling{ nullptr };
 
 	XMFLOAT4X4 m_xmf4x4Parent;
+
+	XMFLOAT3 m_xmf3Look{ 0.0, 0.0, 1.0 };
+	XMFLOAT3 m_xmf3Up{ 0.0, 1.0, 0.0 };
+	XMFLOAT3 m_xmf3Right{ 1.0, 0.0, 0.0 };
 };

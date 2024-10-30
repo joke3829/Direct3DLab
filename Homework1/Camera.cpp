@@ -20,10 +20,14 @@ CCamera::CCamera(ComPtr<ID3D12Device>& pd3dDevice)
 void CCamera::UpdateViewMatrix()
 {
 	if (m_bThirdPerson) {
-		// 오브젝트의 포지션을 받아 오프셋을 더해 eye를 구한다.
+		XMFLOAT3 targetPos = m_pTarget->getPosition();
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&targetPos) + (XMLoadFloat3(&m_xmf3Offset) * 30.0));
+		//XMStoreFloat3(&m_xmf3At, XMVector3Normalize(XMLoadFloat3(&targetPos) - XMLoadFloat3(&m_xmf3Eye)));
+		m_xmf3At = targetPos;
 	}
-	//XMStoreFloat3(&m_xmf3Dir, XMVector3Normalize(XMLoadFloat3(&m_xmf3Dir)));
-	XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
+	else {
+		XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
+	}
 	XMStoreFloat4x4(&(m_cameraInfo.xmf4x4View), XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
 	m_cInfoBegin->xmf3Eye = m_xmf3Eye;
 	XMStoreFloat4x4(&(m_cInfoBegin->xmf4x4View), XMMatrixTranspose(XMLoadFloat4x4(&(m_cameraInfo.xmf4x4View))));
@@ -36,6 +40,14 @@ void CCamera::UpdateProjMatrix(bool bOrtho)
 		XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixOrthographicLH(1280.0f, 720.0f, 1.0f, 500.0f));
 	else
 		XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
+}
+
+void CCamera::SetTarget(HGameObject* target)
+{
+	if (target) {
+		m_pTarget = target;
+		m_bThirdPerson = true;
+	}
 }
 
 void CCamera::SetCameraEye(XMFLOAT3 xmf3Eye)
@@ -63,13 +75,31 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	float cx = (float)cxDelta / 3.0f;
 	float cy = (float)cyDelta / 3.0f;
 
-	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
-	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+	if(m_bThirdPerson){
+		XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
+		XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
 
-	XMVECTOR xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir));
-	mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
+		XMVECTOR xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Offset));
+		limitcy += cy;
+		if (limitcy > 50.0f) {
+			cy -= (limitcy - 50.0f);
+			limitcy = 50.0f;
+		}
+		if (limitcy < -50.0f) {
+			cy += -(limitcy + 50.0f);
+			limitcy = -50.0f;
+		}
+		mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
+		XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
+	}
+	else {
+		XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
+		XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
 
-	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+		XMVECTOR xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir));
+		mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
+		XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+	}
 }
 
 void CCamera::move()

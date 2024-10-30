@@ -511,10 +511,57 @@ void HGameObject::setPMatrix(XMFLOAT4X4& xmf4x4Parent)
 	m_xmf4x4Parent = xmf4x4Parent;
 }
 
+void HGameObject::UpdateWorldMatrix()
+{
+	m_xmf4x4World._11 = m_xmf3Right.x; m_xmf4x4World._12 = m_xmf3Right.y; m_xmf4x4World._13 = m_xmf3Right.z;
+	m_xmf4x4World._21 = m_xmf3Up.x; m_xmf4x4World._22 = m_xmf3Up.y; m_xmf4x4World._23 = m_xmf3Up.z;
+	m_xmf4x4World._31 = m_xmf3Look.x; m_xmf4x4World._32 = m_xmf3Look.y; m_xmf4x4World._33 = m_xmf3Look.z;
+}
+
+XMFLOAT3 HGameObject::getPosition() const
+{
+	XMFLOAT3 xmf3pos(m_xmf4x4World._41, m_xmf4x4World._42, m_xmf4x4World._43);
+	return xmf3pos;
+}
+
 void HGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
+	UpdateWorldMatrix();
 	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent)));
 	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
+}
+
+void HGameObject::move(eDirection dir, float fElapsedTime)
+{
+	XMFLOAT3 cPos(m_xmf4x4World._41, m_xmf4x4World._42, m_xmf4x4World._43);
+	XMFLOAT3 xmf3dir{ 0.0, 0.0, 0.0 };
+	XMMATRIX mtx{};
+	switch (dir) {
+	case DIR_FORWARD:
+		XMStoreFloat3(&xmf3dir, XMLoadFloat3(&m_xmf3Look) * 10.0 * fElapsedTime);
+		break;
+	case DIR_BACK:
+		XMStoreFloat3(&xmf3dir, -XMLoadFloat3(&m_xmf3Look) * 10.0 * fElapsedTime);
+		break;
+	case DIR_LEFT:
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(-50.0 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+		break;
+	case DIR_RIGHT:
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(50.0 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+		break;
+	case DIR_UP:
+		XMStoreFloat3(&xmf3dir, XMLoadFloat3(&m_xmf3Up) * 10.0 * fElapsedTime);
+		break;
+	case DIR_DOWN:
+		XMStoreFloat3(&xmf3dir, -XMLoadFloat3(&m_xmf3Up) * 10.0 * fElapsedTime);
+		break;
+	}
+	XMStoreFloat3(&cPos, XMLoadFloat3(&cPos) + XMLoadFloat3(&xmf3dir));
+	SetPosition(cPos);
 }
 
 void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)

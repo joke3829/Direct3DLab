@@ -83,6 +83,8 @@ protected:
 	D3D_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology;
 	// 바운딩 박스 추가 바람
 
+	BoundingOrientedBox m_OBB;
+
 	XMFLOAT3 m_obbCenter;
 	XMFLOAT3 m_obbExtent;
 };

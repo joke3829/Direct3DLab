@@ -134,3 +134,6 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resourc
 
 	HRESULT hResult = pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
 }
+
+
+enum eDirection { DIR_FORWARD, DIR_BACK, DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN };

@@ -277,7 +277,7 @@ void CGameFramework::WaitForGPUComplete()
 
 void CGameFramework::ProcessInput()
 {
-	m_pScene->ProcessInput();
+	m_pScene->ProcessInput(m_GameTimer.GetTimeElapsed());
 }
 
 void CGameFramework::FrameAdvance()

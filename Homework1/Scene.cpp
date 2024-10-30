@@ -174,6 +174,8 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_pPlayer->setShader(pShader);
 	m_pPlayer->SetPosition(XMFLOAT3(257.0, 100.0, 257.0));
 
+	m_pCamera->SetTarget(m_pPlayer.get());
+
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
 	}
@@ -182,13 +184,24 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_pSkyBox = std::make_unique<CSkyBoxObject>(pd3dDevice, pd3dCommandList, m_pd3dRootSignature);
 }
 
-void CIngameScene::ProcessInput()
+void CIngameScene::ProcessInput(float fElapsedTime)
 {
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
 	if (keyBuffer['W'] & 0x80)
-		m_pCamera->move();
+		m_pPlayer->move(DIR_FORWARD, fElapsedTime);
+	if (keyBuffer['A'] & 0x80)
+		m_pPlayer->move(DIR_LEFT, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pPlayer->move(DIR_BACK, fElapsedTime);
+	if (keyBuffer['D'] & 0x80)
+		m_pPlayer->move(DIR_RIGHT, fElapsedTime);
+	if (keyBuffer[VK_PRIOR] & 0x80)
+		m_pPlayer->move(DIR_UP, fElapsedTime);
+	if (keyBuffer[VK_NEXT] & 0x80)
+		m_pPlayer->move(DIR_DOWN, fElapsedTime);
+
 }
 
 void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)

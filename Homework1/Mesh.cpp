@@ -224,6 +224,7 @@ HMesh::HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>
 		if ("<Bounds>:" == str) {
 			inFile.read((char*)&m_obbCenter, sizeof(XMFLOAT3));
 			inFile.read((char*)&m_obbExtent, sizeof(XMFLOAT3));
+			m_OBB = BoundingOrientedBox(m_obbCenter, m_obbExtent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
 		}
 		else if ("<Positions>:" == str) {
 			inFile.read((char*)&nFactor, sizeof(int));

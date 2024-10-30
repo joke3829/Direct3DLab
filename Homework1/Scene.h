@@ -17,7 +17,7 @@ public:
 	void SetCamera(std::shared_ptr<CCamera>& pCamera);
 
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParma, LPARAM lParam) {};
-	virtual void ProcessInput() {}
+	virtual void ProcessInput(float fElapsedTime) {}
 
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
 protected:
@@ -45,7 +45,7 @@ public:
 
 	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
-	void ProcessInput();
+	void ProcessInput(float fElapsedTime);
 	
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
