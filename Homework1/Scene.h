@@ -9,6 +9,23 @@
 #include "Camera.h"
 #include "Mesh.h"
 
+struct LightInfo {
+	XMFLOAT4 xmf4Diffused;
+	XMFLOAT4 xmf4Specular;
+	XMFLOAT4 xmf4Ambient;
+	XMFLOAT3 xmf3Dir;
+};
+
+class DirLight {
+public:
+	DirLight(ComPtr<ID3D12Device>& pd3dDevice);
+
+	void PrepareRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+protected:
+	LightInfo* m_pLightInfo = nullptr;
+	ComPtr<ID3D12Resource> m_pd3dMappedLight;
+};
+
 class CScene {
 public:
 	virtual void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>&pd3dCommandList) {};
@@ -52,4 +69,5 @@ private:
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 	std::unique_ptr<CSkyBoxObject> m_pSkyBox;
 	std::unique_ptr<HGameObject> m_pPlayer;
+	std::unique_ptr<DirLight> m_pLight;
 };

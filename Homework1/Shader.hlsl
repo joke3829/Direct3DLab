@@ -15,7 +15,7 @@ struct VS_TEXTURED_INPUT
 struct VS_TEXTURED_OUTPUT
 {
     float4 position : SV_POSITION;
-    float4 positionW : POSITION;
+    float3 positionW : POSITION;
     float3 normalW : NORMAL;
     float2 uv : TEXCOORD;
 };
@@ -89,15 +89,32 @@ VS_TEXTURED_OUTPUT VSTextured(VS_TEXTURED_INPUT input)
 {
     VS_TEXTURED_OUTPUT output;
     output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
-    output.positionW = mul(float4(input.position, 1.0f), gmtxWorld);
+    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxWorld);
     output.normalW = mul(input.normal, (float3x3) gmtxWorld);
     output.uv = input.uv;
     return output;
 }
 
-float4 PSTextured(VS_TEXTURED_OUTPUT input)
+float4 PSTextured(VS_TEXTURED_OUTPUT input) : SV_TARGET
 {
-    return gtxtTexture.Sample(gStaticSampler, input.uv);
+    float4 pixelColor = gtxtTexture.Sample(gStaticSampler, input.uv);
+    
+    float Diffuse = max(dot(input.normalW, LightDirction), 0.0f);
+    float4 PhongD = Diffuse * cDiffused * pixelColor;
+    
+    float3 Ref1 = 2.0f * input.normalW * dot(input.normalW, LightDirction) - LightDirction;
+    float View = normalize(cameraEye - input.positionW);
+    float Specular = pow(max(dot(Ref1, View), 0.0f), 1.0f);
+    if (Diffuse <= 0.0f)
+        Specular = 0.0f;
+    float4 PhongS = Specular * float4(1.0, 1.0, 1.0, 1.0) * cSpecular;
+    
+    float4 PhongA = cAmbient * pixelColor * 0.2;
+    
+    float4 finalColor = PhongD + PhongS + PhongA;
+    finalColor.w = 1.0f;
+    
+    return finalColor;
 }
 
 
@@ -218,5 +235,22 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
-    return gtxtTexture.Sample(gStaticSampler, input.uv);
+    float4 pixelColor = gtxtTexture.Sample(gStaticSampler, input.uv);
+    
+    float Diffuse = max(dot(input.normalW, LightDirction), 0.0f);
+    float4 PhongD = Diffuse * cDiffused * pixelColor;
+    
+    float3 Ref1 = 2.0f * input.normalW * dot(input.normalW, LightDirction) - LightDirction;
+    float View = normalize(cameraEye - input.positionW);
+    float Specular = pow(max(dot(Ref1, View), 0.0f), 1.0f);
+    if(Diffuse <= 0.0f)
+        Specular = 0.0f;
+    float4 PhongS = Specular * float4(1.0, 1.0, 1.0, 1.0) * cSpecular;
+    
+    float4 PhongA = cAmbient * pixelColor * 0.2;
+    
+    float4 finalColor = PhongD + PhongS + PhongA;
+    finalColor.w = 1.0f;
+    
+    return finalColor;
 }

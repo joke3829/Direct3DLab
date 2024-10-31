@@ -240,6 +240,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM w
 			ClientCenter.x = 640; ClientCenter.y = 360;
 			ClientToScreen(hWnd, &ClientCenter);
 			SetCursorPos(ClientCenter.x, ClientCenter.y);
+			ShowCursor(FALSE);
 			break;
 		}
 		break;

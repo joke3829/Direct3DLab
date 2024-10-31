@@ -538,10 +538,10 @@ void HGameObject::move(eDirection dir, float fElapsedTime)
 	XMMATRIX mtx{};
 	switch (dir) {
 	case DIR_FORWARD:
-		XMStoreFloat3(&xmf3dir, XMLoadFloat3(&m_xmf3Look) * 10.0 * fElapsedTime);
+		XMStoreFloat3(&xmf3dir, XMLoadFloat3(&m_xmf3Look) * 20.0 * fElapsedTime);
 		break;
 	case DIR_BACK:
-		XMStoreFloat3(&xmf3dir, -XMLoadFloat3(&m_xmf3Look) * 10.0 * fElapsedTime);
+		XMStoreFloat3(&xmf3dir, -XMLoadFloat3(&m_xmf3Look) * 20.0 * fElapsedTime);
 		break;
 	case DIR_LEFT:
 		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(-50.0 * fElapsedTime));
@@ -561,6 +561,14 @@ void HGameObject::move(eDirection dir, float fElapsedTime)
 		break;
 	}
 	XMStoreFloat3(&cPos, XMLoadFloat3(&cPos) + XMLoadFloat3(&xmf3dir));
+	if (cPos.x > 514)
+		cPos.x = 0;
+	else if (cPos.x < 0)
+		cPos.x = 514;
+	if (cPos.z > 514)
+		cPos.z = 0;
+	else if (cPos.z < 0)
+		cPos.z = 514;
 	SetPosition(cPos);
 }
 

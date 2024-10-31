@@ -68,6 +68,8 @@ class CMesh {
 public:
 	virtual void ReleaseUploadBuffer();
 
+	BoundingOrientedBox& getOBB() { return m_OBB; }
+
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	D3D12_VERTEX_BUFFER_VIEW m_d3dVertexBufferView;
@@ -97,6 +99,14 @@ public:
 	//void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	std::vector<TexturedVertex> m_vVertices;
+	std::vector<UINT> m_vIndices;
+};
+
+class CTexturedCubeMesh : public CMesh {
+public:
+	CTexturedCubeMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, XMFLOAT3 extent);
+protected:
+	std::vector<LightingTexturedVertex> m_vVertices;
 	std::vector<UINT> m_vIndices;
 };
 

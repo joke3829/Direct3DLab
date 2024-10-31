@@ -319,3 +319,5 @@ void CPlayerShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr
 
 	delete[] d3dPipelineState.InputLayout.pInputElementDescs;
 }
+
+//===================================================================

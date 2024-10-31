@@ -4,6 +4,23 @@
 //========================================
 #include "Scene.h"
 
+DirLight::DirLight(ComPtr<ID3D12Device>& pd3dDevice)
+{
+	LightInfo temp;
+	CreateBufferResource(pd3dDevice, m_pd3dMappedLight, temp);
+	m_pd3dMappedLight->Map(0, NULL, (void**)&m_pLightInfo);
+	m_pLightInfo->xmf4Diffused = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	m_pLightInfo->xmf4Specular = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	m_pLightInfo->xmf4Ambient = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	XMFLOAT3 xmf(-1.0, 1.0, -1.0);
+	XMStoreFloat3(&m_pLightInfo->xmf3Dir, XMVector3Normalize(XMLoadFloat3(&xmf)));
+}
+
+void DirLight::PrepareRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	pd3dCommandList->SetGraphicsRootConstantBufferView(3, m_pd3dMappedLight->GetGPUVirtualAddress());
+}
+
 void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 {
 	D3D12_DESCRIPTOR_RANGE d3dDescriptorRange[2];
@@ -32,8 +49,8 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dTerrainRange[1].RegisterSpace = 0;
 	d3dTerrainRange[1].OffsetInDescriptorsFromTableStart = 1;
 
-	// 0. 카메라 정보, 1. 월드, 텍스처 테이블, 2. 지형
-	D3D12_ROOT_PARAMETER d3dRootParameter[3];
+	// 0. 카메라 정보, 1. 월드, 텍스처 테이블, 2. 지형, 3. 방향성 조명
+	D3D12_ROOT_PARAMETER d3dRootParameter[4];
 	d3dRootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	d3dRootParameter[0].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[0].Descriptor.ShaderRegister = 0;
@@ -48,6 +65,11 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dRootParameter[2].DescriptorTable.NumDescriptorRanges = 2;
 	d3dRootParameter[2].DescriptorTable.pDescriptorRanges = d3dTerrainRange;
 	d3dRootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	d3dRootParameter[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	d3dRootParameter[3].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[3].Descriptor.ShaderRegister = 2;
+	d3dRootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	
 	D3D12_STATIC_SAMPLER_DESC d3dStaticSamplerDesc;
 	::ZeroMemory(&d3dStaticSamplerDesc, sizeof(D3D12_STATIC_SAMPLER_DESC));
@@ -68,7 +90,7 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
 	d3dRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	d3dRootSignatureDesc.NumParameters = 3;
+	d3dRootSignatureDesc.NumParameters = 4;
 	d3dRootSignatureDesc.NumStaticSamplers = 1;
 	d3dRootSignatureDesc.pParameters = d3dRootParameter;
 	d3dRootSignatureDesc.pStaticSamplers = &d3dStaticSamplerDesc;
@@ -149,8 +171,11 @@ void CMenuScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
 	CreateRootSignature(pd3dDevice);
-	m_vObjects.push_back(std::make_unique<CTerrainObject>(pd3dDevice, pd3dCommandList));
+	// 조명
+	m_pLight = std::make_unique<DirLight>(pd3dDevice);
+
 	// 0 지형
+	m_vObjects.push_back(std::make_unique<CTerrainObject>(pd3dDevice, pd3dCommandList));
 
 	std::unique_ptr<CHeightMapImage> heightMap = std::make_unique<CHeightMapImage>(L"texture\\terrain\\HeightMap.raw", 257, 257, XMFLOAT3(2.0f, 1.0f, 2.0f));
 	std::shared_ptr<CMesh> pMesh = std::make_shared<CHeightMapGridMesh>(pd3dDevice, pd3dCommandList, heightMap);
@@ -166,13 +191,47 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	dynamic_cast<CTerrainObject*>(m_vObjects[0].get())->SetMaterial2(pMaterial);
 
 	// 추가할거 더 추가
+
+	pMesh = std::make_shared<CTexturedCubeMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(20.0, 20.0, 20.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Stone.dds", true);
+	pShader = std::make_shared<CTexturedShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[1]->SetMesh(pMesh); m_vObjects[1]->SetMaterial(pMaterial); m_vObjects[1]->SetPosition(XMFLOAT3(128.5, 200.0, 385.5)); m_vObjects[1]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[2]->SetMesh(pMesh); m_vObjects[2]->SetMaterial(pMaterial); m_vObjects[2]->SetPosition(XMFLOAT3(192.75, 200.0, 257.0)); m_vObjects[2]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[3]->SetMesh(pMesh); m_vObjects[3]->SetMaterial(pMaterial); m_vObjects[3]->SetPosition(XMFLOAT3(385.5, 200.0, 128.5)); m_vObjects[3]->SetShader(pShader);
+
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Ceiling.dds", true);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[4]->SetMesh(pMesh); m_vObjects[4]->SetMaterial(pMaterial); m_vObjects[4]->SetPosition(XMFLOAT3(257.0, 200.0, 385.5)); m_vObjects[4]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[5]->SetMesh(pMesh); m_vObjects[5]->SetMaterial(pMaterial); m_vObjects[5]->SetPosition(XMFLOAT3(321.25, 200.0, 257.0)); m_vObjects[5]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[6]->SetMesh(pMesh); m_vObjects[6]->SetMaterial(pMaterial); m_vObjects[6]->SetPosition(XMFLOAT3(128.5, 200.0, 128.5)); m_vObjects[6]->SetShader(pShader);
+
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Lava(Diffuse).dds", true);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[7]->SetMesh(pMesh); m_vObjects[7]->SetMaterial(pMaterial); m_vObjects[7]->SetPosition(XMFLOAT3(385.5, 200.0, 385.5)); m_vObjects[7]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[8]->SetMesh(pMesh); m_vObjects[8]->SetMaterial(pMaterial); m_vObjects[8]->SetPosition(XMFLOAT3(449.75, 200.0, 257.0)); m_vObjects[8]->SetShader(pShader);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[9]->SetMesh(pMesh); m_vObjects[9]->SetMaterial(pMaterial); m_vObjects[9]->SetPosition(XMFLOAT3(257.5, 200.0, 128.5)); m_vObjects[9]->SetShader(pShader);
+
+
 	std::ifstream inFile{ "model\\Mi24.bin", std::ios::binary };
 	std::unique_ptr<HGameObject> nullp{ nullptr };
 	m_pPlayer = std::make_unique<HGameObject>(pd3dDevice, pd3dCommandList, inFile, nullp);
 	pShader = std::make_shared<CPlayerShader>();
 	pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
 	m_pPlayer->setShader(pShader);
-	m_pPlayer->SetPosition(XMFLOAT3(257.0, 100.0, 257.0));
+	m_pPlayer->SetPosition(XMFLOAT3(257.0, 200.0, 257.0));
 
 	m_pCamera->SetTarget(m_pPlayer.get());
 
@@ -210,6 +269,8 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	pd3dCommandList->SetGraphicsRootSignature(m_pd3dRootSignature.Get());
 	m_pCamera->SetViewportAndScissorRect(pd3dCommandList);
 	m_pCamera->UpdateShaderVariables(pd3dCommandList);
+
+	m_pLight->PrepareRender(pd3dCommandList);
 
 	m_pPlayer->Render(pd3dCommandList, m_pCurrentSetShader);
 
