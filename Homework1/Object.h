@@ -32,6 +32,9 @@ public:
 
 	void SetPosition(XMFLOAT3 xmf3Pos);
 
+	XMFLOAT3 getPosition() const;
+	XMFLOAT3 getLook() const;
+
 	template<class T>
 	void SetMesh(std::shared_ptr<T>& pMesh)
 	{
@@ -95,6 +98,24 @@ public:
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vPlanes;
+};
+
+//=============================================================
+
+class BulletObject : public CGameObject {
+public:
+	BulletObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	void SetPlayer(CGameObject* pPlayer);
+	void Shoot();
+	void Animate(float fElapsedTime);
+
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+protected:
+	CGameObject* m_pPlayer;
+	bool m_bExist;
+	XMFLOAT3 m_xmf3StartPos;
+	XMFLOAT3 m_xmf3Dir;
 };
 
 //==============================================================

@@ -224,6 +224,11 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
 	m_vObjects[9]->SetMesh(pMesh); m_vObjects[9]->SetMaterial(pMaterial); m_vObjects[9]->SetPosition(XMFLOAT3(257.5, 200.0, 128.5)); m_vObjects[9]->SetShader(pShader);
 
+	// ÃÑ¾Ë
+	pMesh = std::make_shared<CTexturedCubeMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(1.0, 1.0, 1.0));
+	m_vObjects.push_back(std::make_unique<BulletObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[10]->SetMesh(pMesh); m_vObjects[10]->SetMaterial(pMaterial); m_vObjects[10]->SetShader(pShader);
+
 
 	std::ifstream inFile{ "model\\Mi24.bin", std::ios::binary };
 	std::unique_ptr<HGameObject> nullp{ nullptr };
@@ -234,7 +239,7 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_pPlayer->SetPosition(XMFLOAT3(257.0, 200.0, 257.0));
 
 	m_pCamera->SetTarget(m_pPlayer.get());
-
+	dynamic_cast<BulletObject*>(m_vObjects[10].get())->SetPlayer(m_pPlayer.get());
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
 	}
@@ -260,7 +265,13 @@ void CIngameScene::ProcessInput(float fElapsedTime)
 		m_pPlayer->move(DIR_UP, fElapsedTime);
 	if (keyBuffer[VK_NEXT] & 0x80)
 		m_pPlayer->move(DIR_DOWN, fElapsedTime);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		dynamic_cast<BulletObject*>(m_vObjects[10].get())->Shoot();
+}
 
+void CIngameScene::Animate(float fElapsedTime)
+{
+	dynamic_cast<BulletObject*>(m_vObjects[10].get())->Animate(fElapsedTime);
 }
 
 void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)

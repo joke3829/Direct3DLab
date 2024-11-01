@@ -287,6 +287,8 @@ void CGameFramework::FrameAdvance()
 
 	ProcessInput();
 
+	m_pScene->Animate(m_GameTimer.GetTimeElapsed());
+
 	m_pd3dCommandAllocator->Reset();
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
 

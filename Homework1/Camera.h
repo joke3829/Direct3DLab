@@ -36,7 +36,7 @@ protected:
 	CB_CAMERA_INFO m_cameraInfo;
 	CB_CAMERA_INFO* m_cInfoBegin;
 
-	XMFLOAT3 m_xmf3Eye{ 0.0f, 0.0f, 0.0f };	// »¬±î...?
+	XMFLOAT3 m_xmf3Eye{ 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 m_xmf3At;
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 

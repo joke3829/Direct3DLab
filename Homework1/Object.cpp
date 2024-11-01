@@ -92,6 +92,18 @@ void CGameObject::SetPosition(XMFLOAT3 xmf3Pos)
 	m_xmf4x4World._43 = xmf3Pos.z;
 }
 
+XMFLOAT3 CGameObject::getPosition() const
+{
+	XMFLOAT3 pos(m_xmf4x4World._41, m_xmf4x4World._42, m_xmf4x4World._43);
+	return pos;
+}
+
+XMFLOAT3 CGameObject::getLook() const
+{
+	XMFLOAT3 look(m_xmf4x4World._31, m_xmf4x4World._32, m_xmf4x4World._33);
+	return look;
+}
+
 void CGameObject::CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDHD;
@@ -200,6 +212,58 @@ void CTerrainObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dC
 
 //=========================================================
 
+BulletObject::BulletObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+	: CGameObject(pd3dDevice, pd3dCommandList)
+{
+	m_pPlayer = nullptr;
+	m_bExist = false;
+}
+
+void BulletObject::SetPlayer(CGameObject* pPlayer)
+{
+	m_pPlayer = pPlayer;
+}
+
+void BulletObject::Shoot()
+{
+	if (!m_bExist) {
+		m_bExist = true;
+		m_xmf3Dir = m_pPlayer->getLook();
+		m_xmf3StartPos = m_pPlayer->getPosition();
+		SetPosition(m_xmf3StartPos);
+	}
+}
+
+void BulletObject::Animate(float fElapsedTime)
+{
+	if (m_bExist) {
+		XMFLOAT3 cPos = getPosition();
+		XMStoreFloat3(&cPos, XMLoadFloat3(&cPos) + (XMLoadFloat3(&m_xmf3Dir) * 40.0f * fElapsedTime));
+		XMFLOAT3 length;
+		XMStoreFloat3(&length, XMVector3Length(XMLoadFloat3(&cPos) - XMLoadFloat3(&m_xmf3StartPos)));
+		if (length.x >= 100.0f)
+			m_bExist = false;
+		else
+			SetPosition(cPos);
+	}
+}
+
+void BulletObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+{
+	if (m_bExist) {
+		pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
+		SetShaderVariables(pd3dCommandList);
+		if (m_pShader && m_pShader != currentSetShader) {
+			m_pShader->SetPipelineState(pd3dCommandList);
+			currentSetShader = m_pShader;
+		}
+		if (m_pMesh) {
+			m_pMesh->Render(pd3dCommandList);
+		}
+	}
+}
+
+//=========================================================
 CSkyBoxObject::CSkyBoxObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, ComPtr<ID3D12RootSignature>& pd3dRootSignature)
 {
 	m_vPlanes.reserve(6);

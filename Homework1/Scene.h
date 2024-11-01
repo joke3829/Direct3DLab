@@ -36,6 +36,8 @@ public:
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParma, LPARAM lParam) {};
 	virtual void ProcessInput(float fElapsedTime) {}
 
+	virtual void Animate(float fElapsedTime) {}
+
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
 protected:
 	ComPtr<ID3D12RootSignature> m_pd3dRootSignature{ nullptr };
@@ -63,7 +65,8 @@ public:
 	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void ProcessInput(float fElapsedTime);
-	
+	void Animate(float fElapsedTime);
+
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
