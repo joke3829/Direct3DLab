@@ -73,4 +73,7 @@ private:
 	std::unique_ptr<CSkyBoxObject> m_pSkyBox;
 	std::unique_ptr<HGameObject> m_pPlayer;
 	std::unique_ptr<DirLight> m_pLight;
+	std::vector<std::unique_ptr<HGameObject>> m_vOpposite;
+	std::array<bool, 3> m_bAlive{ true, true, true };
+	std::array<float, 3> m_fResurrection{};
 };

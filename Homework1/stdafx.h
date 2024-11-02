@@ -31,6 +31,7 @@
 #include <dxgidebug.h>
 
 #include <timeapi.h>
+#include <array>
 #include <vector>
 #include <memory>
 #include <fstream>

@@ -146,6 +146,12 @@ void CGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dComm
 	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
 }
 
+void CGameObject::UpdateOBB()
+{
+	m_pMesh->getOBB().Transform(m_OBB, XMLoadFloat4x4(&m_xmf4x4World));
+	XMStoreFloat4(&m_OBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&m_OBB.Orientation)));
+}
+
 void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
 {
 	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
@@ -586,6 +592,23 @@ XMFLOAT3 HGameObject::getPosition() const
 {
 	XMFLOAT3 xmf3pos(m_xmf4x4World._41, m_xmf4x4World._42, m_xmf4x4World._43);
 	return xmf3pos;
+}
+
+bool HGameObject::collisionCheck(BoundingOrientedBox& obb)
+{
+	BoundingOrientedBox tempOBB;
+	m_pMesh->getOBB().Transform(tempOBB, XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent));
+	XMStoreFloat4(&tempOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&tempOBB.Orientation)));
+
+	if (tempOBB.Intersects(obb)) 
+		return true;
+	if (m_pChild)
+		if (m_pChild->collisionCheck(obb))
+			return true;
+	if (m_pSibling)
+		if (m_pSibling->collisionCheck(obb))
+			return true;
+	return false;
 }
 
 void HGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)

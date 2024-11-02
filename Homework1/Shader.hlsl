@@ -178,7 +178,6 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
     float4 detailColor = gTerrainDetailTexture.Sample(gStaticSampler, input.uv2);
     
     return saturate((baseColor * 0.7) + (detailColor * 0.3));
-
 }
 
 //=====================================

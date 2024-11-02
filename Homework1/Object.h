@@ -35,6 +35,10 @@ public:
 	XMFLOAT3 getPosition() const;
 	XMFLOAT3 getLook() const;
 
+	XMFLOAT4X4 getWorldMatrix() const { return m_xmf4x4World; }
+
+	BoundingOrientedBox& getOBB() { return m_OBB; }
+
 	template<class T>
 	void SetMesh(std::shared_ptr<T>& pMesh)
 	{
@@ -53,6 +57,8 @@ public:
 	virtual void CreateDescriptorHeap(ComPtr<ID3D12Device>& pd3dDevice);
 	virtual void CreateResourceView(ComPtr<ID3D12Device>& pd3dDevice);
 	virtual void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	void UpdateOBB();
 	
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
@@ -65,6 +71,8 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dWorldBuffer{ nullptr };
 
 	ComPtr<ID3D12DescriptorHeap> m_pd3dCbvSrvDescriptor;
+
+	BoundingOrientedBox m_OBB = BoundingOrientedBox();
 };
 
 //==========================================================================================
@@ -106,9 +114,12 @@ class BulletObject : public CGameObject {
 public:
 	BulletObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
+	bool getExist() const { return m_bExist; }
+
 	void SetPlayer(CGameObject* pPlayer);
 	void Shoot();
 	void Animate(float fElapsedTime);
+	void setExist(bool exist) { m_bExist = exist; }
 
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
 protected:
@@ -134,6 +145,8 @@ public:
 
 	void UpdateWorldMatrix();
 	void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	bool collisionCheck(BoundingOrientedBox& obb);
 
 	XMFLOAT3 getPosition() const;
 

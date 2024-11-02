@@ -49,18 +49,18 @@ protected:
 	XMFLOAT2 m_xmf2uv;
 };
 
-class TerrainVertex : public Vertex {
-public:
-	TerrainVertex(XMFLOAT3 xmf3pos, XMFLOAT2 uv1, XMFLOAT2 uv2)
-		: Vertex(xmf3pos)
-	{
-		m_xmf2uv1 = uv1;
-		m_xmf2uv2 = uv2;
-	}
-protected:
-	XMFLOAT2 m_xmf2uv1;
-	XMFLOAT2 m_xmf2uv2;
-};
+	class TerrainVertex : public Vertex {
+	public:
+		TerrainVertex(XMFLOAT3 xmf3pos, XMFLOAT2 uv1, XMFLOAT2 uv2)
+			: Vertex(xmf3pos)
+		{
+			m_xmf2uv1 = uv1;
+			m_xmf2uv2 = uv2;
+		}
+	protected:
+		XMFLOAT2 m_xmf2uv1;
+		XMFLOAT2 m_xmf2uv2;
+	};
 
 //===========================================================================
 
@@ -85,7 +85,7 @@ protected:
 	D3D_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology;
 	// 바운딩 박스 추가 바람
 
-	BoundingOrientedBox m_OBB;
+	BoundingOrientedBox m_OBB = BoundingOrientedBox();
 
 	XMFLOAT3 m_obbCenter;
 	XMFLOAT3 m_obbExtent;

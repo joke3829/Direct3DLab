@@ -237,6 +237,16 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
 	m_pPlayer->setShader(pShader);
 	m_pPlayer->SetPosition(XMFLOAT3(257.0, 200.0, 257.0));
+	for (int i = 0; i < 3; ++i) {
+		inFile.seekg(std::ios::beg);
+		m_vOpposite.push_back(std::make_unique<HGameObject>(pd3dDevice, pd3dCommandList, inFile, nullp));
+		m_vOpposite[i]->SetShader(pShader);
+		m_vOpposite[i]->CreateResourceView(pd3dDevice);
+	}
+
+	m_vOpposite[0]->SetPosition(XMFLOAT3(257.5, 150.0, 128.5));
+	m_vOpposite[1]->SetPosition(XMFLOAT3(321.25, 150.0, 257.0));
+	m_vOpposite[2]->SetPosition(XMFLOAT3(192.75, 150.0, 257.0));
 
 	m_pCamera->SetTarget(m_pPlayer.get());
 	dynamic_cast<BulletObject*>(m_vObjects[10].get())->SetPlayer(m_pPlayer.get());
@@ -271,7 +281,26 @@ void CIngameScene::ProcessInput(float fElapsedTime)
 
 void CIngameScene::Animate(float fElapsedTime)
 {
-	dynamic_cast<BulletObject*>(m_vObjects[10].get())->Animate(fElapsedTime);
+	if (dynamic_cast<BulletObject*>(m_vObjects[10].get())->getExist()) {
+		dynamic_cast<BulletObject*>(m_vObjects[10].get())->Animate(fElapsedTime);
+		m_vObjects[10]->UpdateOBB();
+	}
+	for (int i = 0; i < 3; ++i) {
+		if (m_bAlive[i]) {
+			if (dynamic_cast<BulletObject*>(m_vObjects[10].get())->getExist()) {
+				if (m_vOpposite[i]->collisionCheck(m_vObjects[10]->getOBB())) {
+					m_bAlive[i] = false;
+					m_fResurrection[i] = 0.0f;
+					dynamic_cast<BulletObject*>(m_vObjects[10].get())->setExist(false);
+				}
+			}
+		}
+		else {
+			m_fResurrection[i] += fElapsedTime;
+			if (m_fResurrection[i] >= 3.0f)
+				m_bAlive[i] = true;
+		}
+	}
 }
 
 void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
@@ -285,10 +314,14 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 
 	m_pPlayer->Render(pd3dCommandList, m_pCurrentSetShader);
 
+	for (int i = 0; i < 3; ++i) {
+		if(m_bAlive[i])
+			m_vOpposite[i]->Render(pd3dCommandList, m_pCurrentSetShader);
+	}
+
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
-	
 	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
 	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
 }
