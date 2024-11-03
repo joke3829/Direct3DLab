@@ -38,6 +38,7 @@ public:
 	XMFLOAT4X4 getWorldMatrix() const { return m_xmf4x4World; }
 
 	BoundingOrientedBox& getOBB() { return m_OBB; }
+	BoundingOrientedBox& getMeshOBB() { return m_pMesh->getOBB(); }
 
 	template<class T>
 	void SetMesh(std::shared_ptr<T>& pMesh)
@@ -146,7 +147,9 @@ public:
 	void UpdateWorldMatrix();
 	void SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
-	bool collisionCheck(BoundingOrientedBox& obb);
+	bool collisionCheck(BoundingOrientedBox& obb, XMFLOAT4X4& xmf4x4look, bool forward = false);
+	bool collisionCheck(CGameObject* obstacle);
+	void AutoPilot(std::vector<std::unique_ptr<CGameObject>>& obstacles, float fElapsedTime);
 
 	XMFLOAT3 getPosition() const;
 

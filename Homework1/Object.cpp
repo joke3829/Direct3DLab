@@ -594,20 +594,33 @@ XMFLOAT3 HGameObject::getPosition() const
 	return xmf3pos;
 }
 
-bool HGameObject::collisionCheck(BoundingOrientedBox& obb)
+bool HGameObject::collisionCheck(BoundingOrientedBox& obb, XMFLOAT4X4& xmf4x4look, bool forward)
 {
 	BoundingOrientedBox tempOBB;
-	m_pMesh->getOBB().Transform(tempOBB, XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent));
+	if (forward)
+		m_pMesh->getOBB().Transform(tempOBB, XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent) * XMLoadFloat4x4(&xmf4x4look));
+	else
+		m_pMesh->getOBB().Transform(tempOBB, XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent));
 	XMStoreFloat4(&tempOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&tempOBB.Orientation)));
 
 	if (tempOBB.Intersects(obb)) 
 		return true;
-	if (m_pChild)
-		if (m_pChild->collisionCheck(obb))
-			return true;
-	if (m_pSibling)
-		if (m_pSibling->collisionCheck(obb))
-			return true;
+	if (forward) {
+		if (m_pChild)
+			if (m_pChild->collisionCheck(obb, xmf4x4look, true))
+				return true;
+		if (m_pSibling)
+			if (m_pSibling->collisionCheck(obb, xmf4x4look, true))
+				return true;
+	}
+	else {
+		if (m_pChild)
+			if (m_pChild->collisionCheck(obb, xmf4x4look))
+				return true;
+		if (m_pSibling)
+			if (m_pSibling->collisionCheck(obb, xmf4x4look))
+				return true;
+	}
 	return false;
 }
 
@@ -616,6 +629,47 @@ void HGameObject::SetShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dComm
 	UpdateWorldMatrix();
 	XMStoreFloat4x4(m_pMappedWorld, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World) * XMLoadFloat4x4(&m_xmf4x4Parent)));
 	pd3dCommandList->SetGraphicsRootDescriptorTable(1, m_pd3dCbvSrvDescriptor->GetGPUDescriptorHandleForHeapStart());
+}
+
+bool HGameObject::collisionCheck(CGameObject* obstacle)
+{
+	XMFLOAT4X4 xmf4x4;
+	XMStoreFloat4x4(&xmf4x4, XMMatrixIdentity());
+	XMFLOAT3 xmf3(m_xmf3Look.x * 30.0f, m_xmf3Look.y * 30.0f, m_xmf3Look.z * 30.0f);
+	xmf4x4._41 = xmf3.x; xmf4x4._42 = xmf3.y; xmf4x4._43 = xmf3.z;
+	BoundingOrientedBox tempBox = BoundingOrientedBox();
+	obstacle->getMeshOBB().Transform(tempBox, XMLoadFloat4x4(&obstacle->getWorldMatrix()));
+	XMStoreFloat4(&tempBox.Orientation, XMQuaternionNormalize(XMLoadFloat4(&tempBox.Orientation)));
+	if (collisionCheck(tempBox, xmf4x4, true)) {
+		return true;
+	}
+	return false;
+}
+
+void HGameObject::AutoPilot(std::vector<std::unique_ptr<CGameObject>>& obstacles, float fElapsedTime)
+{
+	// 1~9가 장애물 [1, 10)
+	for (int i = 1; i < 10; ++i) {
+		if (collisionCheck(obstacles[i].get())) {
+			XMFLOAT3 oPos = obstacles[i]->getPosition();
+			XMVECTOR oVec = XMVector3Normalize(XMLoadFloat3(&oPos) - XMLoadFloat3(&getPosition()));
+			XMVECTOR crossVec = XMVector3Cross(XMLoadFloat3(&m_xmf3Look), oVec);
+			XMStoreFloat3(&oPos, XMVector3Dot(XMLoadFloat3(&m_xmf3Up), crossVec));
+			XMMATRIX mtx;
+			if (oPos.x >= 0) {
+				mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(-50.0 * fElapsedTime));
+				XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+				XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+			}
+			else {
+				mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(50.0 * fElapsedTime));
+				XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+				XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+			}
+			break;
+		}
+	}
+	move(DIR_FORWARD, fElapsedTime);
 }
 
 void HGameObject::move(eDirection dir, float fElapsedTime)

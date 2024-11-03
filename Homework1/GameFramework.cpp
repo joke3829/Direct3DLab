@@ -201,10 +201,6 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
 			break;
-		case 'w':
-		case 'W':
-			//m_pCamera->forward = true;
-			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 			break;

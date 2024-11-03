@@ -263,32 +263,57 @@ void CIngameScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	if (keyBuffer['W'] & 0x80)
-		m_pPlayer->move(DIR_FORWARD, fElapsedTime);
-	if (keyBuffer['A'] & 0x80)
-		m_pPlayer->move(DIR_LEFT, fElapsedTime);
-	if (keyBuffer['S'] & 0x80)
-		m_pPlayer->move(DIR_BACK, fElapsedTime);
-	if (keyBuffer['D'] & 0x80)
-		m_pPlayer->move(DIR_RIGHT, fElapsedTime);
-	if (keyBuffer[VK_PRIOR] & 0x80)
-		m_pPlayer->move(DIR_UP, fElapsedTime);
-	if (keyBuffer[VK_NEXT] & 0x80)
-		m_pPlayer->move(DIR_DOWN, fElapsedTime);
-	if (keyBuffer[VK_SPACE] & 0x80)
-		dynamic_cast<BulletObject*>(m_vObjects[10].get())->Shoot();
+	if(!autoPilot){
+		if (keyBuffer['W'] & 0x80)
+			m_pPlayer->move(DIR_FORWARD, fElapsedTime);
+		if (keyBuffer['A'] & 0x80)
+			m_pPlayer->move(DIR_LEFT, fElapsedTime);
+		if (keyBuffer['S'] & 0x80)
+			m_pPlayer->move(DIR_BACK, fElapsedTime);
+		if (keyBuffer['D'] & 0x80)
+			m_pPlayer->move(DIR_RIGHT, fElapsedTime);
+		if (keyBuffer[VK_PRIOR] & 0x80)
+			m_pPlayer->move(DIR_UP, fElapsedTime);
+		if (keyBuffer[VK_NEXT] & 0x80)
+			m_pPlayer->move(DIR_DOWN, fElapsedTime);
+		if (keyBuffer[VK_SPACE] & 0x80)
+			dynamic_cast<BulletObject*>(m_vObjects[10].get())->Shoot();
+	}
+}
+
+void CIngameScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'p':
+		case 'P':
+			if (autoPilot)
+				autoPilot = false;
+			else
+				autoPilot = true;
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
 }
 
 void CIngameScene::Animate(float fElapsedTime)
 {
+	if (autoPilot) {
+		m_pPlayer->AutoPilot(m_vObjects, fElapsedTime);
+	}
 	if (dynamic_cast<BulletObject*>(m_vObjects[10].get())->getExist()) {
 		dynamic_cast<BulletObject*>(m_vObjects[10].get())->Animate(fElapsedTime);
 		m_vObjects[10]->UpdateOBB();
 	}
+	XMFLOAT4X4 temp{};
 	for (int i = 0; i < 3; ++i) {
 		if (m_bAlive[i]) {
 			if (dynamic_cast<BulletObject*>(m_vObjects[10].get())->getExist()) {
-				if (m_vOpposite[i]->collisionCheck(m_vObjects[10]->getOBB())) {
+				if (m_vOpposite[i]->collisionCheck(m_vObjects[10]->getOBB(), temp)) {
 					m_bAlive[i] = false;
 					m_fResurrection[i] = 0.0f;
 					dynamic_cast<BulletObject*>(m_vObjects[10].get())->setExist(false);

@@ -62,7 +62,7 @@ class CIngameScene : public CScene {
 public:
 	void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
-	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void ProcessInput(float fElapsedTime);
 	void Animate(float fElapsedTime);
@@ -76,4 +76,5 @@ private:
 	std::vector<std::unique_ptr<HGameObject>> m_vOpposite;
 	std::array<bool, 3> m_bAlive{ true, true, true };
 	std::array<float, 3> m_fResurrection{};
+	bool autoPilot{ false };
 };
