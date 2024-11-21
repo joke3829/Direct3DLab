@@ -49,18 +49,29 @@ protected:
 	XMFLOAT2 m_xmf2uv;
 };
 
-	class TerrainVertex : public Vertex {
-	public:
-		TerrainVertex(XMFLOAT3 xmf3pos, XMFLOAT2 uv1, XMFLOAT2 uv2)
-			: Vertex(xmf3pos)
-		{
-			m_xmf2uv1 = uv1;
-			m_xmf2uv2 = uv2;
-		}
-	protected:
-		XMFLOAT2 m_xmf2uv1;
-		XMFLOAT2 m_xmf2uv2;
-	};
+class TerrainVertex : public Vertex {
+public:
+	TerrainVertex(XMFLOAT3 xmf3pos, XMFLOAT2 uv1, XMFLOAT2 uv2)
+		: Vertex(xmf3pos)
+	{
+		m_xmf2uv1 = uv1;
+		m_xmf2uv2 = uv2;
+	}
+protected:
+	XMFLOAT2 m_xmf2uv1;
+	XMFLOAT2 m_xmf2uv2;
+};
+
+class CBillboardVertex : public Vertex {
+public:
+	CBillboardVertex(XMFLOAT3 xmf3Pos, XMFLOAT2 xmf2Size)
+		: Vertex(xmf3Pos)
+	{
+		m_xmf2Size = xmf2Size;
+	}
+protected:
+	XMFLOAT2 m_xmf2Size;	// x = width, y = height
+};
 
 //===========================================================================
 

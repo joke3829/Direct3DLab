@@ -64,3 +64,12 @@ public:
 
 	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 };
+
+class CBillboardShader : public CShader {
+public:
+	CBillboardShader() {}
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	D3D12_RASTERIZER_DESC CreateRasterizerDesc();
+};

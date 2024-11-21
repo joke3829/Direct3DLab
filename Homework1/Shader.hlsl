@@ -232,6 +232,7 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
     return (output);
 }
 
+[earlydeapthstencil]
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
     float4 pixelColor = gtxtTexture.Sample(gStaticSampler, input.uv);
@@ -253,3 +254,11 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
     
     return finalColor;
 }
+
+//===============================================
+
+struct VS_BILLBOARD_INPUT
+{
+    float3 position : POSITION;
+    float2 size : SIZE;
+};
