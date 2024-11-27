@@ -16,6 +16,8 @@ public:
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 	virtual D3D12_RASTERIZER_DESC CreateRasterizerDesc();
 
+	virtual D3D12_STREAM_OUTPUT_DESC CreateStreamOutputDesc() {}
+
 	virtual void SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) 
 	{
 		pd3dCommandList->SetPipelineState(m_pd3dPipelineState.Get());
@@ -68,6 +70,24 @@ public:
 class CBillboardShader : public CShader {
 public:
 	CBillboardShader() {}
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	D3D12_RASTERIZER_DESC CreateRasterizerDesc();
+};
+
+class CParticleSOShader : public CShader {
+public:
+	CParticleSOShader() {}
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_STREAM_OUTPUT_DESC CreateStreamOutputDesc();
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
+class CParticleDrawShader : public CShader {
+public:
+	CParticleDrawShader() {}
 	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();

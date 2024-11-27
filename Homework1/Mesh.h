@@ -73,6 +73,23 @@ protected:
 	XMFLOAT2 m_xmf2Size;	// x = width, y = height
 };
 
+class CParticleVertex : public Vertex {	// 이 정점에서 시작한다.
+public:
+	CParticleVertex(XMFLOAT3 pos, XMFLOAT3 dir)
+		: Vertex(pos)
+	{
+		m_xmf3Dir = dir;
+		m_fSize = 0.0f;
+		m_fLifeTime = 1.0f;
+		m_nType = 0;
+	}
+protected:
+	XMFLOAT3 m_xmf3Dir;	// 파티클이 움직일 방향
+	float m_fSize;
+	float m_fLifeTime;
+	UINT m_nType;	// 0: 발사대, 1: 연기
+};
+
 //===========================================================================
 
 class CMesh {
@@ -173,4 +190,34 @@ protected:
 	UINT m_nBiTangent;
 	
 	// SubMeshes(인덱스 개수)
+};
+
+class CBillboardMesh : public CMesh {
+public:
+	CBillboardMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, XMFLOAT3 xmf3Center, XMFLOAT2 xmf2SIze);
+private:
+	std::vector<CBillboardVertex> m_vVertices;
+};
+
+class CParticleMesh : public CMesh {
+public:
+	CParticleMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	void Reset();
+
+	void OnePathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+	void TwoPathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+	void PostRender();
+protected:
+	bool m_bStart;
+	UINT m_nMaxParticle;
+
+	ComPtr<ID3D12Resource> m_pd3dStreamOutput;
+	ComPtr<ID3D12Resource> m_pd3dDrawBuffer;
+
+	ComPtr<ID3D12Resource> m_pd3dReadBackBuffer;
+	ComPtr<ID3D12Resource> m_pd3dUploadBuffer;
+	UINT64* m_pMappedPointer;
+
+	D3D12_STREAM_OUTPUT_BUFFER_VIEW m_d3dStreamOutputBufferView;
 };

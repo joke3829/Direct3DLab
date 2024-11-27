@@ -259,6 +259,90 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 
 struct VS_BILLBOARD_INPUT
 {
-    float3 position : POSITION;
+    float3 center : POSITION;
     float2 size : SIZE;
 };
+
+struct VS_BILLBOARD_OUTPUT
+{
+    float3 center : POSITION;
+    float2 size : SIZE;
+};
+
+struct GS_OUPUT
+{
+    float4 position : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+VS_BILLBOARD_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
+{
+    VS_BILLBOARD_OUTPUT output;
+    output.center = input.center;
+    output.size = input.size;
+    return output;
+}
+
+[maxvertexcount(4)]
+void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUPUT> outStream)
+{
+    float3 vUp = float3(0.0, 1.0, 0.0);
+    float3 vLook = cameraEye - input[0].center;
+    vLook.y = 0.0f;
+    vLook = normalize(vLook);
+    float3 vRight = cross(vUp, vLook);
+    float4 Vertices[4];
+    float fHalfW = input[0].size.x / 2;
+    float fHalfH = input[0].size.y / 2;
+    Vertices[0] = float4(input[0].center + fHalfW * vRight - fHalfH * vUp, 1.0f);
+    Vertices[1] = float4(input[0].center + fHalfW * vRight + fHalfH * vUp, 1.0f);
+    Vertices[2] = float4(input[0].center - fHalfW * vRight - fHalfH * vUp, 1.0f);
+    Vertices[3] = float4(input[0].center - fHalfW * vRight + fHalfH * vUp, 1.0f);
+    float2 UVs[4] = { float2(0.0, 1.0), float2(0.0, 0.0), float2(1.0, 1.0), float2(1.0, 0.0) };
+    GS_OUPUT output;
+    for (int i = 0; i < 4; ++i)
+    {
+        output.position = mul(mul(Vertices[i], gmtxView), gmtxProj);
+        output.uv = UVs[i];
+        outStream.Append(output);
+    }
+}
+
+[earlydeathstencil]
+float4 PSBillboard(GS_OUPUT input) : SV_TARGET
+{
+    float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
+    if(fTexColor.w == 0.0f)
+        discard;
+    return fTexColor;
+}
+
+
+//===================================================
+
+struct VS_PARTICLE_POINT
+{
+    float3 position : POSITION;
+    float3 direction : DIRECTION;
+    float size : SIZE;
+    float lifeTime : LIFETIME;
+    uint particleType : PARTICLETYPE;
+};
+
+VS_PARTICLE_POINT VSSOParticle(VS_PARTICLE_POINT input)
+{
+    return input;
+}
+
+[maxvertexcount(100)]
+void GSSOParticle(point VS_PARTICLE_POINT input[1], inout PointStream<VS_PARTICLE_POINT> outStream)
+{
+    if (input[0].particleType == 0)
+    {
+        
+    }
+    else
+    {
+        
+    }
+}

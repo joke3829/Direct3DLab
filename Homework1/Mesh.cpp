@@ -424,3 +424,93 @@ void HMesh::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	else
 		pd3dCommandList->DrawInstanced(m_nVertices, 1, 0, 0);
 }
+
+CBillboardMesh::CBillboardMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, XMFLOAT3 xmf3Center, XMFLOAT2 xmf2SIze)
+{
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	m_OBB = BoundingOrientedBox();
+
+	m_vVertices.push_back(CBillboardVertex(xmf3Center, xmf2SIze));
+	m_nVertices = m_vVertices.size();
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dVertexUploadBuffer, m_vVertices, m_pd3dVertexBuffer);
+
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.SizeInBytes = m_nVertices * sizeof(CBillboardVertex);
+	m_d3dVertexBufferView.StrideInBytes = sizeof(CBillboardVertex);
+}
+
+//============================================================
+
+CParticleMesh::CParticleMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	std::vector<CParticleVertex> m_vVertices;
+	m_vVertices.push_back(CParticleVertex(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(0.0, 0.0, 0.0)));
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dVertexUploadBuffer, m_vVertices, m_pd3dVertexBuffer);
+
+	m_bStart = true;
+	m_nVertices = 1;
+	m_nMaxParticle = 100;
+	
+	::CreateBufferResource(pd3dDevice, m_pd3dStreamOutput, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
+	::CreateBufferResource(pd3dDevice, m_pd3dDrawBuffer, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+	::CreateBufferResource(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
+	::CreateBufferResource(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	m_pd3dUploadBuffer->Map(0, NULL, (void**)&m_pMappedPointer);
+}
+
+void CParticleMesh::Reset()
+{
+	m_bStart = true;
+}
+
+void CParticleMesh::OnePathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	if (m_bStart) {
+		m_nVertices = 1;
+		m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+		m_d3dVertexBufferView.SizeInBytes = sizeof(CParticleVertex);
+		m_d3dVertexBufferView.StrideInBytes = sizeof(CParticleVertex);
+		m_bStart = false;
+	}
+	else {
+		m_d3dVertexBufferView.BufferLocation = m_pd3dDrawBuffer->GetGPUVirtualAddress();
+		m_d3dVertexBufferView.SizeInBytes = sizeof(CParticleVertex) * m_nVertices;
+		m_d3dVertexBufferView.StrideInBytes = sizeof(CParticleVertex);
+	}
+	m_d3dStreamOutputBufferView.BufferLocation = m_pd3dStreamOutput->GetGPUVirtualAddress();
+	m_d3dStreamOutputBufferView.SizeInBytes = sizeof(CParticleVertex) * m_nMaxParticle;
+	m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pd3dReadBackBuffer->GetGPUVirtualAddress();
+
+	*m_pMappedPointer = 0;
+	pd3dCommandList->CopyResource(m_pd3dReadBackBuffer.Get(), m_pd3dUploadBuffer.Get());
+
+	D3D12_STREAM_OUTPUT_BUFFER_VIEW d3dSOBufferView[1] = { m_d3dStreamOutputBufferView };
+	pd3dCommandList->SOSetTargets(0, 1, d3dSOBufferView);
+
+	CMesh::Render(pd3dCommandList);	// One-Path
+
+	//pd3dCommandList->DrawInstanced(m_nVertices, 1, 0, 0);
+}
+
+// 파이프라인 바꾸고 출력
+void CParticleMesh::TwoPathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	pd3dCommandList->SOSetTargets(0, 1, NULL);
+	CMesh::Render(pd3dCommandList);
+}
+
+// ReadBack 버퍼를 읽는다.
+void CParticleMesh::PostRender()
+{
+	m_pd3dStreamOutput.Swap(m_pd3dDrawBuffer);
+
+	UINT64* pFilledSize = nullptr;
+	m_pd3dReadBackBuffer->Map(0, NULL, (void**)&pFilledSize);
+	m_nVertices = UINT(*pFilledSize) / sizeof(CParticleVertex);
+	m_pd3dReadBackBuffer->Unmap(0, NULL);
+
+	if (m_nVertices == 0)
+		m_bStart = true;
+}

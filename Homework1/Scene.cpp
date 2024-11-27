@@ -229,6 +229,13 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_vObjects.push_back(std::make_unique<BulletObject>(pd3dDevice, pd3dCommandList));
 	m_vObjects[10]->SetMesh(pMesh); m_vObjects[10]->SetMaterial(pMaterial); m_vObjects[10]->SetShader(pShader);
 
+	// 빌보드 텍스쳐 11
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(257.0, 200.0, 257.0), XMFLOAT2(50.0, 60.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Tree02.png", false);
+	pShader = std::make_shared<CBillboardShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	m_vObjects[11]->SetMesh(pMesh); m_vObjects[11]->SetShader(pShader); m_vObjects[11]->SetMaterial(pMaterial);
+
 
 	std::ifstream inFile{ "model\\Mi24.bin", std::ios::binary };
 	std::unique_ptr<HGameObject> nullp{ nullptr };
