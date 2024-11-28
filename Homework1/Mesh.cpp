@@ -20,6 +20,44 @@ void CMesh::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 
 //=======================================================================
 
+CPlaneMesh::CPlaneMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width, float height)
+{
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	std::vector<Vertex> vVertices;
+	// x, z Æò¸é
+	float halfW = width / 2;
+	float halfH = height / 2;
+	vVertices.reserve(4);
+	vVertices.push_back(Vertex(XMFLOAT3(-halfW, 0.0f, halfH)));
+	vVertices.push_back(Vertex(XMFLOAT3(halfW, 0.0f, halfH)));
+	vVertices.push_back(Vertex(XMFLOAT3(halfW, 0.0f, -halfH)));
+	vVertices.push_back(Vertex(XMFLOAT3(-halfW, 0.0f, -halfH)));
+
+	m_nVertices = vVertices.size();
+
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dVertexUploadBuffer, vVertices, m_pd3dVertexBuffer);
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.SizeInBytes = sizeof(Vertex) * m_nVertices;
+	m_d3dVertexBufferView.StrideInBytes = sizeof(Vertex);
+
+	std::vector<UINT> vIndices;
+	vIndices.reserve(6);
+
+	vIndices.push_back(0);
+	vIndices.push_back(1);
+	vIndices.push_back(2);
+
+	vIndices.push_back(0);
+	vIndices.push_back(2);
+	vIndices.push_back(3);
+
+	m_nIndices = vIndices.size();
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dIndexUploadBuffer, vIndices, m_pd3dIndexBuffer);
+	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
+	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
+}
+
 CTexturedSquareMesh::CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width, float height)
 {
 	m_vVertices.reserve(4);
@@ -452,11 +490,11 @@ CParticleMesh::CParticleMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 	m_nVertices = 1;
 	m_nMaxParticle = 100;
 	
-	::CreateBufferResource(pd3dDevice, m_pd3dStreamOutput, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
-	::CreateBufferResource(pd3dDevice, m_pd3dDrawBuffer, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	//::CreateBufferResource(pd3dDevice, m_pd3dStreamOutput, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
+	//::CreateBufferResource(pd3dDevice, m_pd3dDrawBuffer, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-	::CreateBufferResource(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
-	::CreateBufferResource(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	//::CreateBufferResource(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
+	//::CreateBufferResource(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	m_pd3dUploadBuffer->Map(0, NULL, (void**)&m_pMappedPointer);
 }
 

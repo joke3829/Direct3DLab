@@ -346,3 +346,28 @@ void GSSOParticle(point VS_PARTICLE_POINT input[1], inout PointStream<VS_PARTICL
         
     }
 }
+
+//===============================================================
+
+struct VS_WATER_INPUT
+{
+    float3 position : POSITION;
+};
+
+struct VS_WATER_OUTPUT
+{
+    float4 posW : SV_POSITION;
+};
+
+VS_WATER_OUTPUT VSWater(VS_WATER_INPUT input)
+{
+    VS_WATER_OUTPUT output;
+    output.posW = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+    return output;
+}
+
+[earlydepthstencil]
+float4 PSWater(VS_WATER_OUTPUT intput) : SV_TARGET
+{
+    return float4(0.0, 0.0, 1.0, 0.5);
+}

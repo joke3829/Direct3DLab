@@ -119,6 +119,11 @@ protected:
 	XMFLOAT3 m_obbExtent;
 };
 
+class CPlaneMesh : public CMesh {
+public:
+	CPlaneMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width = 1.0f, float height = 1.0f);
+};
+
 class CTexturedSquareMesh : public CMesh {
 public:
 	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width = 1.0f, float height = 1.0f);

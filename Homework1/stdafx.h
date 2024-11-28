@@ -135,7 +135,7 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resourc
 	HRESULT hResult = pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
 }
 
-
+template<class T>
 void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>& pd3dResource, UINT64 nBytes,  D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceState)
 {
 	D3D12_HEAP_PROPERTIES d3dHP;

@@ -236,6 +236,12 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
 	m_vObjects[11]->SetMesh(pMesh); m_vObjects[11]->SetShader(pShader); m_vObjects[11]->SetMaterial(pMaterial);
 
+	//================================================================================
+
+	m_pWater = std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList);
+	pShader = std::make_shared<CWaterShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	pMesh = std::make_shared<CPlaneMesh>(pd3dDevice, pd3dCommandList, 514.0, 514.0);
+	m_pWater->SetMesh(pMesh); m_pWater->SetMaterial(pMaterial); m_pWater->SetShader(pShader); m_pWater->SetPosition(XMFLOAT3(257.0, 80.0, 257.0));
 
 	std::ifstream inFile{ "model\\Mi24.bin", std::ios::binary };
 	std::unique_ptr<HGameObject> nullp{ nullptr };
@@ -261,6 +267,8 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 		temp->CreateResourceView(pd3dDevice);
 	}
 	m_pPlayer->CreateResourceView(pd3dDevice);
+
+	m_pWater->CreateResourceView(pd3dDevice);
 
 	m_pSkyBox = std::make_unique<CSkyBoxObject>(pd3dDevice, pd3dCommandList, m_pd3dRootSignature);
 }
@@ -354,6 +362,9 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
+
+	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
+
 	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
 	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
 }

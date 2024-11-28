@@ -16,7 +16,7 @@ public:
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 	virtual D3D12_RASTERIZER_DESC CreateRasterizerDesc();
 
-	virtual D3D12_STREAM_OUTPUT_DESC CreateStreamOutputDesc() {}
+	virtual D3D12_STREAM_OUTPUT_DESC CreateStreamOutputDesc() { D3D12_STREAM_OUTPUT_DESC p; return p; }
 
 	virtual void SetPipelineState(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) 
 	{
@@ -64,6 +64,15 @@ public:
 	CPlayerShader() {}
 	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
 
+	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
+class CWaterShader : public CShader {
+public:
+	CWaterShader() {}
+	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	D3D12_BLEND_DESC CreateBlendDesc();
 	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 };
 
