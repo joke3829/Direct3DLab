@@ -359,6 +359,7 @@ struct VS_WATER_OUTPUT
     float4 posW : SV_POSITION;
 };
 
+/*
 VS_WATER_OUTPUT VSWater(VS_WATER_INPUT input)
 {
     VS_WATER_OUTPUT output;
@@ -368,6 +369,18 @@ VS_WATER_OUTPUT VSWater(VS_WATER_INPUT input)
 
 [earlydepthstencil]
 float4 PSWater(VS_WATER_OUTPUT intput) : SV_TARGET
+{
+    return float4(0.0, 0.0, 1.0, 0.5);
+}
+*/
+
+float4 VSWater(float3 input : POSITION) : SV_POSITION
+{
+    return mul(mul(mul(float4(input, 1.0f), gmtxWorld), gmtxView), gmtxProj);
+}
+
+[earlydepthstencil]
+float4 PSWater(float4 input : SV_POSITION) : SV_TARGET
 {
     return float4(0.0, 0.0, 1.0, 0.5);
 }
