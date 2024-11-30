@@ -183,6 +183,17 @@ float4 PSBillboardInstancing(VS_BILLBOARD_INSTANCING_OUTPUT input) : SV_TARGET
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+
+VS_TEXTURED_OUTPUT VSSkyBox(VS_TEXTURED_INPUT input)
+{
+    VS_TEXTURED_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProjection);
+    output.position.z = output.position.w;
+    output.uv = input.uv;
+
+    return (output);
+}
+
 float4 PSSkyBox(VS_TEXTURED_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtTexture.Sample(gClampSamplerState, input.uv);

@@ -301,7 +301,7 @@ void CGameFramework::FrameAdvance()
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandle = m_pd3dRTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	d3dCPUHandle.ptr += (m_nCurrentSwapChainIndex * m_nRTVIncrementSize);
-	float color[4] = { 0.0, 0.0, 0.0, 1.0 };
+	float color[4] = { 1.0, 1.0, 1.0, 1.0 };
 	m_pd3dCommandList->ClearRenderTargetView(d3dCPUHandle, color, 0, NULL);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandleD = m_pd3dDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();

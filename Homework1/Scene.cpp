@@ -352,6 +352,9 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 
 	m_pLight->PrepareRender(pd3dCommandList);
 
+	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
+	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
+
 	m_pPlayer->Render(pd3dCommandList, m_pCurrentSetShader);
 
 	for (int i = 0; i < 3; ++i) {
@@ -363,9 +366,7 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
 
-	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
 
-	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
-	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
+	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
 }
 

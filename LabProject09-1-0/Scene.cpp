@@ -232,14 +232,14 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12CommandQueue* pd3dComm
 	pObjectShader->BuildObjects(pd3dDevice, pd3dCommandQueue, pd3dCommandList, m_pTerrain);
 	m_ppShaders[0] = pObjectShader;
 
-	/*
-	m_nEnvironmentMappingShaders = 1;
+	
+	/*m_nEnvironmentMappingShaders = 1;
 	m_ppEnvironmentMappingShaders = new CDynamicCubeMappingShader * [m_nEnvironmentMappingShaders];
 
 	m_ppEnvironmentMappingShaders[0] = new CDynamicCubeMappingShader(256);
 	m_ppEnvironmentMappingShaders[0]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	m_ppEnvironmentMappingShaders[0]->BuildObjects(pd3dDevice, pd3dCommandQueue, pd3dCommandList, m_pTerrain);
-	*/
+	m_ppEnvironmentMappingShaders[0]->BuildObjects(pd3dDevice, pd3dCommandQueue, pd3dCommandList, m_pTerrain);*/
+	
 	BuildLightsAndMaterials();
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -539,7 +539,7 @@ void CScene::OnPreRender(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dComma
 {
 	for (int i = 0; i < m_nEnvironmentMappingShaders; i++)
 	{
-		m_ppEnvironmentMappingShaders[i]->OnPreRender(pd3dDevice, pd3dCommandQueue, this);
+		//m_ppEnvironmentMappingShaders[i]->OnPreRender(pd3dDevice, pd3dCommandQueue, this);
 	}
 }
 
@@ -548,7 +548,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
-	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
 	for (int i = 0; i < m_nShaders; i++)
@@ -565,5 +564,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	{
 		m_ppObjects[i]->Render(pd3dCommandList, pCamera);
 	}
+	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 }
 

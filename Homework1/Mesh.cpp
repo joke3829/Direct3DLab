@@ -99,7 +99,7 @@ CTexturedSquareMesh::CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPt
 	m_vIndices.reserve(6);
 
 	// 0왼쪽 위, 1 오른쪽 위, 2 오른쪽 아래, 3왼쪽 아래
-	switch (arrow) {
+	/*switch (arrow) {
 	case 좌:
 		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-512.0f, 512.0f, -512.0f), XMFLOAT2(0.0f, 0.0f)));
 		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-512.0f, 512.0f, 512.0f), XMFLOAT2(1.0f, 0.0f)));
@@ -135,6 +135,44 @@ CTexturedSquareMesh::CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPt
 		m_vVertices.push_back(TexturedVertex(XMFLOAT3(512.0f, -512.0f, 512.0f), XMFLOAT2(1.0f, 0.0f)));
 		m_vVertices.push_back(TexturedVertex(XMFLOAT3(512.0f, -512.0f, -512.0f), XMFLOAT2(1.0f, 1.0f)));
 		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-512.0f, -512.0, -512.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	}*/
+	switch (arrow) {
+	case 좌:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0f, -10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0f, 10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0f, 10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0, -10.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	case 우:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, 10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, -10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0f, -10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0, 10.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	case 앞:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0f, 10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, 10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0f, 10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0, 10.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	case 뒤:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, -10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0f, -10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0f, -10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0, -10.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	case 상:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0f, -10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, -10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, 10.0f, 10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, 10.0, 10.0f), XMFLOAT2(0.0f, 1.0f)));
+		break;
+	case 하:
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0f, 10.0f), XMFLOAT2(0.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0f, 10.0f), XMFLOAT2(1.0f, 0.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(10.0f, -10.0f, -10.0f), XMFLOAT2(1.0f, 1.0f)));
+		m_vVertices.push_back(TexturedVertex(XMFLOAT3(-10.0f, -10.0, -10.0f), XMFLOAT2(0.0f, 1.0f)));
 		break;
 	}
 	m_nVertices = m_vVertices.size();
