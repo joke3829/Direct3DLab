@@ -438,7 +438,7 @@ D3D12_RASTERIZER_DESC CBillboardShader::CreateRasterizerDesc()
 	D3D12_RASTERIZER_DESC d3dRDesc;
 	::ZeroMemory(&d3dRDesc, sizeof(D3D12_RASTERIZER_DESC));
 	d3dRDesc.FillMode = D3D12_FILL_MODE_SOLID;
-	d3dRDesc.CullMode = D3D12_CULL_MODE_NONE;
+	d3dRDesc.CullMode = D3D12_CULL_MODE_BACK;
 	d3dRDesc.AntialiasedLineEnable = FALSE;
 	d3dRDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 	d3dRDesc.DepthBias = 0;

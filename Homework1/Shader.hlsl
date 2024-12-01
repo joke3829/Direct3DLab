@@ -278,7 +278,7 @@ struct GS_OUPUT
 VS_BILLBOARD_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
 {
     VS_BILLBOARD_OUTPUT output;
-    output.center = input.center;
+    output.center = mul(float4(input.center, 1.0f), gmtxWorld);
     output.size = input.size;
     return output;
 }
