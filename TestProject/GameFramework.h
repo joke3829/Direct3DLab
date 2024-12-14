@@ -7,7 +7,7 @@ class CGameFramework
 {
 public:
 	void InitFramework(HINSTANCE hInstance, HWND hWnd);
-	void BuildObject();
+	//void BuildObject();
 	void Release();
 
 	void CreateDevice();
@@ -26,7 +26,7 @@ private:
 	HWND m_hWnd;
 
 	IDXGIFactory4* m_pdxgiFactory{ nullptr };
-	ComPtr<ID3D12Device> m_pd3dDevice{ nullptr };
+	ComPtr<ID3D12Device5> m_pd3dDevice{ nullptr };
 	//ID3D12Device* m_pd3dDevice{ nullptr };
 	IDXGISwapChain3* m_pdxgiSwapChain{ nullptr };
 
@@ -34,7 +34,7 @@ private:
 	UINT m_nMsaa4xQualityLevels = 0;
 
 	ID3D12CommandAllocator* m_pd3dCommandAllocator{ nullptr };
-	ID3D12GraphicsCommandList* m_pd3dCommandList{ nullptr };
+	ID3D12GraphicsCommandList4* m_pd3dCommandList{ nullptr };
 	ID3D12CommandQueue* m_pd3dCommandQueue{ nullptr };
 
 	static const UINT m_nSwapChainBuffers = 2;

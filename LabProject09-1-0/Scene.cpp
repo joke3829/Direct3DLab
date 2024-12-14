@@ -232,14 +232,14 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12CommandQueue* pd3dComm
 	pObjectShader->BuildObjects(pd3dDevice, pd3dCommandQueue, pd3dCommandList, m_pTerrain);
 	m_ppShaders[0] = pObjectShader;
 
-	/*
+	
 	m_nEnvironmentMappingShaders = 1;
 	m_ppEnvironmentMappingShaders = new CDynamicCubeMappingShader * [m_nEnvironmentMappingShaders];
 
 	m_ppEnvironmentMappingShaders[0] = new CDynamicCubeMappingShader(256);
 	m_ppEnvironmentMappingShaders[0]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 	m_ppEnvironmentMappingShaders[0]->BuildObjects(pd3dDevice, pd3dCommandQueue, pd3dCommandList, m_pTerrain);
-	*/
+	
 	BuildLightsAndMaterials();
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -558,7 +558,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 	for (int i = 0; i < m_nEnvironmentMappingShaders; i++)
 	{
-		//m_ppEnvironmentMappingShaders[i]->Render(pd3dCommandList, pCamera);
+		m_ppEnvironmentMappingShaders[i]->Render(pd3dCommandList, pCamera);
 	}
 
 	for (int i = 0; i < m_nObjects; i++)

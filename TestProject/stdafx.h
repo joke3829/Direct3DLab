@@ -30,6 +30,7 @@
 
 #include <dxgidebug.h>
 
+#include <stdexcept>
 #include <timeapi.h>
 #include <vector>
 #include <memory>

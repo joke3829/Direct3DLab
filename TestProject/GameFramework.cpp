@@ -6,36 +6,35 @@ void CGameFramework::InitFramework(HINSTANCE hInstance, HWND hWnd)
 	m_hWnd = hWnd;
 
 	_tcscpy_s(m_pszFrameRate, _T("TestProject ("));
-
 	CreateDevice();
 	CreateCommandLAQ();
 	CreateSwapChain();
 	CreateRTVDSV();
 
 	//m_pScene = std::make_unique<NoShaderScene>();
-	m_pScene = std::make_unique<CWallScene>();
+	//m_pScene = std::make_unique<CWallScene>();
 
-	m_pScene->CreateGrahicsRootSignature(m_pd3dDevice.Get());
-	m_pScene->CreatePipelineState(m_pd3dDevice.Get());
-	BuildObject();
+	//m_pScene->CreateGrahicsRootSignature(m_pd3dDevice.Get());
+	//m_pScene->CreatePipelineState(m_pd3dDevice.Get());
+	//BuildObject();
 }
 
-void CGameFramework::BuildObject()
-{
-	// 오브젝트 생성시 커맨드 명령 실행 필수(upload버퍼가 죽는다)
-	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
-
-
-	m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
-
-
-	m_pd3dCommandList->Close();
-	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
-	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
-	WaitForGPUComplete();
-
-	dynamic_cast<CWallScene*>(m_pScene.get())->SetMeshes();
-}
+//void CGameFramework::BuildObject()
+//{
+//	// 오브젝트 생성시 커맨드 명령 실행 필수(upload버퍼가 죽는다)
+//	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
+//
+//
+//	m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+//
+//
+//	m_pd3dCommandList->Close();
+//	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
+//	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
+//	WaitForGPUComplete();
+//
+//	dynamic_cast<CWallScene*>(m_pScene.get())->SetMeshes();
+//}
 
 void CGameFramework::Release()
 {
@@ -80,12 +79,17 @@ void CGameFramework::CreateDevice()
 	for (UINT i = 0; m_pdxgiFactory->EnumAdapters(i, &pdxgiAdapter) != DXGI_ERROR_NOT_FOUND; ++i) {
 		DXGI_ADAPTER_DESC dxgiAdapterDesc;
 		pdxgiAdapter->GetDesc(&dxgiAdapterDesc);
-		if (SUCCEEDED(D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)&m_pd3dDevice)))
-			break;
+
+		wchar_t adapterName[128];
+		wcscpy_s(adapterName, dxgiAdapterDesc.Description);
+		if (wcsstr(adapterName, L"NVIDIA") != nullptr) {
+			if (SUCCEEDED(D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device5), (void**)&m_pd3dDevice)))
+				break;
+		}
 	}
 	if (!pdxgiAdapter) {
 		m_pdxgiFactory->EnumWarpAdapter(__uuidof(IDXGIAdapter), (void**)&pdxgiAdapter);
-		D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)&m_pd3dDevice);
+		D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)&m_pd3dDevice);
 	}
 
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS d3dMsaaQualityLevels;
@@ -103,6 +107,11 @@ void CGameFramework::CreateDevice()
 
 	if (pdxgiAdapter)
 		pdxgiAdapter->Release();
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+	m_pd3dDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5));
+	if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
+		exit(0);
 }
 
 void CGameFramework::CreateCommandLAQ()
@@ -113,7 +122,7 @@ void CGameFramework::CreateCommandLAQ()
 	d3dCommandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	d3dCommandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	m_pd3dDevice->CreateCommandQueue(&d3dCommandQueueDesc, __uuidof(ID3D12CommandQueue), (void**)&m_pd3dCommandQueue);
-	m_pd3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pd3dCommandAllocator, NULL, __uuidof(ID3D12GraphicsCommandList), (void**)&m_pd3dCommandList);
+	m_pd3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pd3dCommandAllocator, NULL, __uuidof(ID3D12GraphicsCommandList4), (void**)&m_pd3dCommandList);
 
 	m_pd3dCommandList->Close();
 }
@@ -301,7 +310,7 @@ void CGameFramework::FrameAdvance()
 
 
 	// 렌더링 코드 추가
-	m_pScene->Render(m_pd3dCommandList);
+	//m_pScene->Render(m_pd3dCommandList);
 
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
