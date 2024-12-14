@@ -230,11 +230,83 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 	m_vObjects[10]->SetMesh(pMesh); m_vObjects[10]->SetMaterial(pMaterial); m_vObjects[10]->SetShader(pShader);
 
 	// 빌보드 텍스쳐 11
-	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(257.0, 200.0, 257.0), XMFLOAT2(50.0, 60.0));
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(16.0, 19.2));
 	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Tree02.png", false);
 	pShader = std::make_shared<CBillboardShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
-	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	m_vObjects[11]->SetMesh(pMesh); m_vObjects[11]->SetShader(pShader); m_vObjects[11]->SetMaterial(pMaterial);
+	int index = m_vObjects.size();
+	for (int i = 0; i < 171; i += 20) {
+		for (int j = 0; j < 257; j += 10) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 100.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i/2, j/2) + 9.6, j));
+				++index;
+			}
+		}
+	}
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(6.0, 6.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Grass01.png", false);
+
+	for (int i = 182; i < 342; i += 6) {
+		for (int j = 0; j < 257; j += 6) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 90.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i / 2, j / 2) + 3.0, j));
+				++index;
+			}
+		}
+	}
+
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(8.0, 8.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Flower01.png", false);
+
+	for (int i = 342; i < 514; i += 6) {
+		for (int j = 0; j < 257; j += 6) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 90.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i / 2, j / 2) + 4.0, j));
+				++index;
+			}
+		}
+	}
+
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(8.0, 8.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Flower02.png", false);
+
+	for (int i = 0; i < 128; i += 10) {
+		for (int j = 258; j < 514; j += 10) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 100.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i / 2, j / 2) + 4.0, j));
+				++index;
+			}
+		}
+	}
+
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(24.0, 24.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Tree01.png", false);
+
+	for (int i = 132; i < 300; i += 10) {
+		for (int j = 258; j < 400; j += 10) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 100.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i / 2, j / 2) + 12.0, j));
+				++index;
+			}
+		}
+	}
+
+	pMesh = std::make_shared<CBillboardMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT2(8.0, 20.8));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Tree03.png", false);
+
+	for (int i = 400; i < 514; i += 10) {
+		for (int j = 300; j < 400; j += 10) {
+			if (heightMap->GetHeight(i / 2, j / 2) > 100.0) {
+				m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+				m_vObjects[index]->SetMesh(pMesh); m_vObjects[index]->SetShader(pShader); m_vObjects[index]->SetMaterial(pMaterial); m_vObjects[index]->SetPosition(XMFLOAT3(i, heightMap->GetHeight(i / 2, j / 2) + 10.4, j));
+				++index;
+			}
+		}
+	}
 
 	//================================================================================
 
@@ -352,6 +424,9 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 
 	m_pLight->PrepareRender(pd3dCommandList);
 
+	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
+	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
+
 	m_pPlayer->Render(pd3dCommandList, m_pCurrentSetShader);
 
 	for (int i = 0; i < 3; ++i) {
@@ -363,9 +438,7 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
 
-	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
 
-	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
-	m_pSkyBox->Render(pd3dCommandList, m_pCurrentSetShader);
+	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
 }
 

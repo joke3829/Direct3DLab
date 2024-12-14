@@ -278,7 +278,7 @@ struct GS_OUPUT
 VS_BILLBOARD_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
 {
     VS_BILLBOARD_OUTPUT output;
-    output.center = input.center;
+    output.center = mul(float4(input.center, 1.0f), gmtxWorld);
     output.size = input.size;
     return output;
 }
@@ -291,6 +291,7 @@ void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUP
     vLook.y = 0.0f;
     vLook = normalize(vLook);
     float3 vRight = cross(vUp, vLook);
+    //vUp = cross(vLook, vRight);
     float4 Vertices[4];
     float fHalfW = input[0].size.x / 2;
     float fHalfH = input[0].size.y / 2;
