@@ -49,8 +49,9 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dTerrainRange[1].RegisterSpace = 0;
 	d3dTerrainRange[1].OffsetInDescriptorsFromTableStart = 1;
 
-	// 0. 카메라 정보, 1. 월드, 텍스처 테이블, 2. 지형, 3. 방향성 조명
-	D3D12_ROOT_PARAMETER d3dRootParameter[4];
+	// 0. 카메라 정보, 1. 월드, 텍스처 테이블, 2. 지형, 3. 방향성 조명,
+	// 4. 경과시간
+	D3D12_ROOT_PARAMETER d3dRootParameter[5];
 	d3dRootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	d3dRootParameter[0].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[0].Descriptor.ShaderRegister = 0;
@@ -70,6 +71,11 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dRootParameter[3].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[3].Descriptor.ShaderRegister = 2;
 	d3dRootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	d3dRootParameter[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	d3dRootParameter[4].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[4].Descriptor.ShaderRegister = 5;
+	d3dRootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	
 	D3D12_STATIC_SAMPLER_DESC d3dStaticSamplerDesc;
 	::ZeroMemory(&d3dStaticSamplerDesc, sizeof(D3D12_STATIC_SAMPLER_DESC));
@@ -89,8 +95,8 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 
 	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
-	d3dRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	d3dRootSignatureDesc.NumParameters = 4;
+	d3dRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+	d3dRootSignatureDesc.NumParameters = 5;
 	d3dRootSignatureDesc.NumStaticSamplers = 1;
 	d3dRootSignatureDesc.pParameters = d3dRootParameter;
 	d3dRootSignatureDesc.pStaticSamplers = &d3dStaticSamplerDesc;
@@ -171,6 +177,11 @@ void CMenuScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
 	CreateRootSignature(pd3dDevice);
+	float tempData{};
+	::CreateBufferResource(pd3dDevice, m_pd3dElapsed, tempData);
+	m_pd3dElapsed->Map(0, NULL, (void**)&m_pMappedElapsed);
+	*m_pMappedElapsed = 0;
+
 	// 조명
 	m_pLight = std::make_unique<DirLight>(pd3dDevice);
 
@@ -308,6 +319,20 @@ void CIngameScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Gr
 		}
 	}
 
+	m_pSmog = std::make_unique<CSmogObject>(pd3dDevice, pd3dCommandList);
+	m_pSmog1 = std::make_unique<CSmogObject>(pd3dDevice, pd3dCommandList);
+	pMesh = std::make_shared<CParticleMesh>(pd3dDevice, pd3dCommandList);
+	m_pSmog->SetMesh(pMesh); m_pSmog1->SetMesh(std::make_shared<CParticleMesh>(pd3dDevice, pd3dCommandList));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Fire1.dds", true);
+	m_pSmog->SetMaterial(pMaterial); m_pSmog1->SetMaterial(pMaterial);
+	pShader = std::make_shared<CParticleSOShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pSmog->SetShader(pShader); m_pSmog1->SetShader(pShader);
+	pShader = std::make_shared<CParticleDrawShader>(); pShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pSmog->SetDrawShader(pShader); m_pSmog1->SetDrawShader(pShader);
+	m_pSmog->CreateResourceView(pd3dDevice); m_pSmog1->CreateResourceView(pd3dDevice);
+	m_pSmog->SetPosition(XMFLOAT3(200, heightMap->GetHeight(100, 150), 300));
+	m_pSmog1->SetPosition(XMFLOAT3(380, heightMap->GetHeight(160, 30), 60));
+
 	//================================================================================
 
 	m_pWater = std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList);
@@ -389,6 +414,7 @@ void CIngameScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM 
 
 void CIngameScene::Animate(float fElapsedTime)
 {
+	*m_pMappedElapsed = fElapsedTime;
 	if (autoPilot) {
 		m_pPlayer->AutoPilot(m_vObjects, fElapsedTime);
 	}
@@ -422,6 +448,8 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	m_pCamera->SetViewportAndScissorRect(pd3dCommandList);
 	m_pCamera->UpdateShaderVariables(pd3dCommandList);
 
+	pd3dCommandList->SetGraphicsRootConstantBufferView(4, m_pd3dElapsed->GetGPUVirtualAddress());	// 경과 시간 보내기
+
 	m_pLight->PrepareRender(pd3dCommandList);
 
 	m_pSkyBox->UpdatePosition(m_pCamera->getCameraEye());
@@ -438,7 +466,14 @@ void CIngameScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 		temp->Render(pd3dCommandList, m_pCurrentSetShader);
 	}
 
+	m_pSmog->Render(pd3dCommandList, m_pCurrentSetShader);
+	m_pSmog1->Render(pd3dCommandList, m_pCurrentSetShader);
 
 	m_pWater->Render(pd3dCommandList, m_pCurrentSetShader);
 }
 
+void CIngameScene::PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	m_pSmog->PostRender(pd3dCommandList);
+	m_pSmog1->PostRender(pd3dCommandList);
+}

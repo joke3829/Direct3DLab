@@ -168,3 +168,23 @@ protected:
 	XMFLOAT3 m_xmf3Up{ 0.0, 1.0, 0.0 };
 	XMFLOAT3 m_xmf3Right{ 1.0, 0.0, 0.0 };
 };
+
+
+class CSmogObject : public CGameObject {
+public:
+	CSmogObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+
+	template<class T>
+	void SetDrawShader(std::shared_ptr<T>& pShader)
+	{
+		m_pDrawShader = pShader;
+	}
+
+	void Reset();
+
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+	void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+protected:
+	std::shared_ptr<CShader> m_pDrawShader;
+};

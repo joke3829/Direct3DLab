@@ -80,7 +80,7 @@ public:
 	{
 		m_xmf3Dir = dir;
 		m_fSize = 0.0f;
-		m_fLifeTime = 1.0f;
+		m_fLifeTime = 0.0f;
 		m_nType = 0;
 	}
 protected:
@@ -212,13 +212,15 @@ public:
 
 	void OnePathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 	void TwoPathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
-	void PostRender();
+	void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	bool m_bStart;
 	UINT m_nMaxParticle;
 
 	ComPtr<ID3D12Resource> m_pd3dStreamOutput;
 	ComPtr<ID3D12Resource> m_pd3dDrawBuffer;
+
+	ComPtr<ID3D12Resource> m_pFilledSizeBuffer;
 
 	ComPtr<ID3D12Resource> m_pd3dReadBackBuffer;
 	ComPtr<ID3D12Resource> m_pd3dUploadBuffer;

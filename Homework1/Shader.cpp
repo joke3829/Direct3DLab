@@ -458,6 +458,7 @@ void CParticleSOShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, Co
 {
 	ID3DBlob* pd3dVBlob{ nullptr };
 	ID3DBlob* pd3dGBlob{ nullptr };
+	//ID3DBlob* pd3dPBlob{ nullptr };
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState;
 	::ZeroMemory(&d3dPipelineState, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
@@ -467,13 +468,14 @@ void CParticleSOShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, Co
 	d3dPipelineState.RasterizerState = CreateRasterizerDesc();
 	d3dPipelineState.BlendState = CreateBlendDesc();
 	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.NumRenderTargets = 0;
 	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
-	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	d3dPipelineState.SampleDesc.Count = 1;
 	d3dPipelineState.SampleMask = UINT_MAX;
-	d3dPipelineState.VS = CreateShaderFromFile(L"Shader.hlsl", "VSBillboard", "vs_5_1", &pd3dVBlob);
-	d3dPipelineState.GS = CreateShaderFromFile(L"Shader.hlsl", "GSBillboard", "gs_5_1", &pd3dGBlob);
+	d3dPipelineState.VS = CreateShaderFromFile(L"Shader.hlsl", "VSSOParticle", "vs_5_1", &pd3dVBlob);
+	d3dPipelineState.GS = CreateShaderFromFile(L"Shader.hlsl", "GSSOParticle", "gs_5_1", &pd3dGBlob);
+	d3dPipelineState.PS.BytecodeLength = 0; d3dPipelineState.PS.pShaderBytecode = NULL;
 	d3dPipelineState.StreamOutput = CreateStreamOutputDesc();
 	HRESULT hResult = pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineState, __uuidof(ID3D12PipelineState), (void**)m_pd3dPipelineState.GetAddressOf());
 
@@ -490,9 +492,10 @@ void CParticleSOShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, Co
 D3D12_STREAM_OUTPUT_DESC CParticleSOShader::CreateStreamOutputDesc()
 {
 	D3D12_STREAM_OUTPUT_DESC d3dSODesc;
+	::ZeroMemory(&d3dSODesc, sizeof(D3D12_STREAM_OUTPUT_DESC));
 	D3D12_SO_DECLARATION_ENTRY* pd3dSOEntry = new D3D12_SO_DECLARATION_ENTRY[5];
 	pd3dSOEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
-	pd3dSOEntry[1] = { 0, "DIRECTION", 0, 0, 3, 0 };
+	pd3dSOEntry[1] = { 0, "VELOCITY", 0, 0, 3, 0 };
 	pd3dSOEntry[2] = { 0, "SIZE", 0, 0, 1, 0 };
 	pd3dSOEntry[3] = { 0, "LIFETIME", 0, 0, 1, 0 };
 	pd3dSOEntry[4] = { 0, "PARTICLETYPE", 0, 0, 1, 0 };
@@ -505,6 +508,7 @@ D3D12_STREAM_OUTPUT_DESC CParticleSOShader::CreateStreamOutputDesc()
 	d3dSODesc.NumStrides = 1;
 	d3dSODesc.pBufferStrides = pStride;
 	d3dSODesc.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
 	return d3dSODesc;
 }
 
@@ -514,7 +518,7 @@ D3D12_INPUT_LAYOUT_DESC CParticleSOShader::CreateInputLayout()
 
 	D3D12_INPUT_ELEMENT_DESC* pd3dIEDesc = new D3D12_INPUT_ELEMENT_DESC[5];
 	pd3dIEDesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	pd3dIEDesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dIEDesc[1] = { "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[4] = { "PARTICLETYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
@@ -542,9 +546,9 @@ void CParticleDrawShader::CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, 
 	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	d3dPipelineState.SampleDesc.Count = 1;
 	d3dPipelineState.SampleMask = UINT_MAX;
-	d3dPipelineState.VS = CreateShaderFromFile(L"Shader.hlsl", "VSBillboard", "vs_5_1", &pd3dVBlob);
-	d3dPipelineState.GS = CreateShaderFromFile(L"Shader.hlsl", "GSBillboard", "gs_5_1", &pd3dGBlob);
-	d3dPipelineState.PS = CreateShaderFromFile(L"Shader.hlsl", "PS", "ps_5_1", &pd3dPBlob);
+	d3dPipelineState.VS = CreateShaderFromFile(L"Shader.hlsl", "VSDrawParticle", "vs_5_1", &pd3dVBlob);
+	d3dPipelineState.GS = CreateShaderFromFile(L"Shader.hlsl", "GSDrawParticle", "gs_5_1", &pd3dGBlob);
+	d3dPipelineState.PS = CreateShaderFromFile(L"Shader.hlsl", "PSDrawParticle", "ps_5_1", &pd3dPBlob);
 	HRESULT hResult = pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineState, __uuidof(ID3D12PipelineState), (void**)m_pd3dPipelineState.GetAddressOf());
 
 	if (pd3dVBlob)
@@ -563,7 +567,7 @@ D3D12_INPUT_LAYOUT_DESC CParticleDrawShader::CreateInputLayout()
 
 	D3D12_INPUT_ELEMENT_DESC* pd3dIEDesc = new D3D12_INPUT_ELEMENT_DESC[5];
 	pd3dIEDesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	pd3dIEDesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dIEDesc[1] = { "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dIEDesc[4] = { "PARTICLETYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };

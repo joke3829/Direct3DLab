@@ -738,3 +738,36 @@ void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std
 		m_pSibling->Render(pd3dCommandList, currentSetShader);
 	}
 }
+
+// ==============================================================
+
+CSmogObject::CSmogObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+	: CGameObject(pd3dDevice, pd3dCommandList)
+{
+
+}
+
+void CSmogObject::Reset()
+{
+	dynamic_cast<CParticleMesh*>(m_pMesh.get())->Reset();
+}
+
+void CSmogObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+{
+	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
+	SetShaderVariables(pd3dCommandList);
+	// SOShader
+	m_pShader->SetPipelineState(pd3dCommandList);
+	dynamic_cast<CParticleMesh*>(m_pMesh.get())->OnePathRender(pd3dCommandList);
+
+	// DrawShader
+	m_pDrawShader->SetPipelineState(pd3dCommandList);
+	dynamic_cast<CParticleMesh*>(m_pMesh.get())->TwoPathRender(pd3dCommandList);
+
+	currentSetShader = m_pDrawShader;
+}
+
+void CSmogObject::PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	dynamic_cast<CParticleMesh*>(m_pMesh.get())->PostRender(pd3dCommandList);
+}

@@ -691,14 +691,14 @@ void CParticleMesh::PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nP
 		}
 		m_d3dStreamOutputBufferView.BufferLocation = m_pd3dStreamOutputBuffer->GetGPUVirtualAddress();
 		m_d3dStreamOutputBufferView.SizeInBytes = m_nStride * m_nMaxParticles;
-		//m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pd3dDefaultBufferFilledSize->GetGPUVirtualAddress();
-		m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pd3dReadBackBufferFilledSize->GetGPUVirtualAddress();
+		m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pd3dDefaultBufferFilledSize->GetGPUVirtualAddress();
+
 //		*m_pnUploadBufferFilledSize = m_nStride * m_nVertices;
 		*m_pnUploadBufferFilledSize = 0;
 
-		//::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_COPY_DEST);
-		pd3dCommandList->CopyResource(m_pd3dReadBackBufferFilledSize, m_pd3dUploadBufferFilledSize);
-		//::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_STREAM_OUT);
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_COPY_DEST);
+		pd3dCommandList->CopyResource(m_pd3dDefaultBufferFilledSize, m_pd3dUploadBufferFilledSize);
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_STREAM_OUT);
 	}
 	else if (nPipelineState == 1)
 	{
@@ -729,9 +729,9 @@ void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipe
 #else
 		CMesh::Render(pd3dCommandList); //Stream Output to m_pd3dStreamOutputBuffer
 
-		//::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		//pd3dCommandList->CopyResource(m_pd3dReadBackBufferFilledSize, m_pd3dDefaultBufferFilledSize);
-		//::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_STREAM_OUT);
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dCommandList->CopyResource(m_pd3dReadBackBufferFilledSize, m_pd3dDefaultBufferFilledSize);
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDefaultBufferFilledSize, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_STREAM_OUT);
 #endif
 	}
 	else if (nPipelineState == 1)

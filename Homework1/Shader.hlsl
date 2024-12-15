@@ -78,6 +78,11 @@ cbuffer TerrainInfo : register(b4)
     matrix gmtxTerrainWorld : packoffset(c0);
 }
 
+cbuffer ElapsedInfo : register(b5)
+{
+    float fElapsedTime;
+}
+
 Texture2D gtxtTexture : register(t0);
 Texture2D gTerrainBaseTexture : register(t1);
 Texture2D gTerrainDetailTexture : register(t2);
@@ -269,7 +274,7 @@ struct VS_BILLBOARD_OUTPUT
     float2 size : SIZE;
 };
 
-struct GS_OUPUT
+struct GS_OUTPUT
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD;
@@ -284,7 +289,7 @@ VS_BILLBOARD_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
 }
 
 [maxvertexcount(4)]
-void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUPUT> outStream)
+void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUTPUT> outStream)
 {
     float3 vUp = float3(0.0, 1.0, 0.0);
     float3 vLook = cameraEye - input[0].center;
@@ -300,7 +305,7 @@ void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUP
     Vertices[2] = float4(input[0].center - fHalfW * vRight - fHalfH * vUp, 1.0f);
     Vertices[3] = float4(input[0].center - fHalfW * vRight + fHalfH * vUp, 1.0f);
     float2 UVs[4] = { float2(0.0, 1.0), float2(0.0, 0.0), float2(1.0, 1.0), float2(1.0, 0.0) };
-    GS_OUPUT output;
+    GS_OUTPUT output;
     for (int i = 0; i < 4; ++i)
     {
         output.position = mul(mul(Vertices[i], gmtxView), gmtxProj);
@@ -310,7 +315,7 @@ void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUP
 }
 
 [earlydeathstencil]
-float4 PSBillboard(GS_OUPUT input) : SV_TARGET
+float4 PSBillboard(GS_OUTPUT input) : SV_TARGET
 {
     float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
     if(fTexColor.w == 0.0f)
@@ -324,28 +329,95 @@ float4 PSBillboard(GS_OUPUT input) : SV_TARGET
 struct VS_PARTICLE_POINT
 {
     float3 position : POSITION;
-    float3 direction : DIRECTION;
+    float3 direction : VELOCITY;
     float size : SIZE;
     float lifeTime : LIFETIME;
     uint particleType : PARTICLETYPE;
 };
+
+
 
 VS_PARTICLE_POINT VSSOParticle(VS_PARTICLE_POINT input)
 {
     return input;
 }
 
-[maxvertexcount(100)]
+[maxvertexcount(30)]
 void GSSOParticle(point VS_PARTICLE_POINT input[1], inout PointStream<VS_PARTICLE_POINT> outStream)
 {
-    if (input[0].particleType == 0)
+    VS_PARTICLE_POINT particle = input[0];
+    particle.lifeTime -= fElapsedTime;
+    if (particle.particleType == 0)
     {
-        
+        if (particle.lifeTime <= 0)
+        {
+            particle.lifeTime = 0.5f;
+            outStream.Append(particle);
+            
+            VS_PARTICLE_POINT newParticle = particle;
+            newParticle.lifeTime = 4.0f;
+            newParticle.direction = float3(0.0, 1.0, 0.0);
+            newParticle.particleType = 1;
+            newParticle.size = 0.0f;
+            outStream.Append(newParticle);
+        }
+        else
+        {
+            outStream.Append(particle);
+        }
     }
     else
     {
-        
+        if (particle.lifeTime > 0)
+        {
+            particle.position += ((20.0f * particle.direction) * fElapsedTime);
+            particle.size += (10.0f * fElapsedTime);
+            outStream.Append(particle);
+        }
     }
+}
+
+
+VS_PARTICLE_POINT VSDrawParticle(VS_PARTICLE_POINT input)
+{
+    VS_PARTICLE_POINT output = input;
+    output.position = mul(float4(input.position, 1.0f), gmtxWorld);
+    return output;
+}
+
+[maxvertexcount(4)]
+void GSDrawParticle(point VS_PARTICLE_POINT input[1], inout TriangleStream<GS_OUTPUT> outStream)
+{
+    float3 vUp = float3(0.0, 1.0, 0.0);
+    float3 vLook = cameraEye - input[0].position;
+    //vLook.y = 0.0f;
+    vLook = normalize(vLook);
+    float3 vRight = cross(vUp, vLook);
+    vUp = cross(vLook, vRight);
+    float4 Vertices[4];
+    float fHalf = input[0].size / 2;
+    Vertices[0] = float4(input[0].position + fHalf * vRight - fHalf * vUp, 1.0f);
+    Vertices[1] = float4(input[0].position + fHalf * vRight + fHalf * vUp, 1.0f);
+    Vertices[2] = float4(input[0].position - fHalf * vRight - fHalf * vUp, 1.0f);
+    Vertices[3] = float4(input[0].position - fHalf * vRight + fHalf * vUp, 1.0f);
+    float2 UVs[4] = { float2(0.0, 1.0), float2(0.0, 0.0), float2(1.0, 1.0), float2(1.0, 0.0) };
+    GS_OUTPUT output;
+    for (int i = 0; i < 4; ++i)
+    {
+        output.position = mul(mul(Vertices[i], gmtxView), gmtxProj);
+        output.uv = UVs[i];
+        outStream.Append(output);
+    }
+}
+
+[earlydeathstencil]
+float4 PSDrawParticle(GS_OUTPUT input) : SV_TARGET
+{
+    float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
+    if (fTexColor.w == 0.0f)
+        discard;
+    return fTexColor;
+
 }
 
 //===============================================================
@@ -359,21 +431,6 @@ struct VS_WATER_OUTPUT
 {
     float4 posW : SV_POSITION;
 };
-
-/*
-VS_WATER_OUTPUT VSWater(VS_WATER_INPUT input)
-{
-    VS_WATER_OUTPUT output;
-    output.posW = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj);
-    return output;
-}
-
-[earlydepthstencil]
-float4 PSWater(VS_WATER_OUTPUT intput) : SV_TARGET
-{
-    return float4(0.0, 0.0, 1.0, 0.5);
-}
-*/
 
 float4 VSWater(float3 input : POSITION) : SV_POSITION
 {

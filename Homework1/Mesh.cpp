@@ -526,13 +526,14 @@ CParticleMesh::CParticleMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 
 	m_bStart = true;
 	m_nVertices = 1;
-	m_nMaxParticle = 100;
+	m_nMaxParticle = 30;
 	
-	//::CreateBufferResource(pd3dDevice, m_pd3dStreamOutput, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
-	//::CreateBufferResource(pd3dDevice, m_pd3dDrawBuffer, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	::CreateBufferResourceS(pd3dDevice, m_pd3dStreamOutput, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
+	::CreateBufferResourceS(pd3dDevice, m_pd3dDrawBuffer, sizeof(CParticleVertex) * m_nMaxParticle, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-	//::CreateBufferResource(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
-	//::CreateBufferResource(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	::CreateBufferResourceS(pd3dDevice, m_pFilledSizeBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
+	::CreateBufferResourceS(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
+	::CreateBufferResourceS(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	m_pd3dUploadBuffer->Map(0, NULL, (void**)&m_pMappedPointer);
 }
 
@@ -557,10 +558,10 @@ void CParticleMesh::OnePathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommand
 	}
 	m_d3dStreamOutputBufferView.BufferLocation = m_pd3dStreamOutput->GetGPUVirtualAddress();
 	m_d3dStreamOutputBufferView.SizeInBytes = sizeof(CParticleVertex) * m_nMaxParticle;
-	m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pd3dReadBackBuffer->GetGPUVirtualAddress();
+	m_d3dStreamOutputBufferView.BufferFilledSizeLocation = m_pFilledSizeBuffer->GetGPUVirtualAddress();
 
 	*m_pMappedPointer = 0;
-	pd3dCommandList->CopyResource(m_pd3dReadBackBuffer.Get(), m_pd3dUploadBuffer.Get());
+	pd3dCommandList->CopyResource(m_pFilledSizeBuffer.Get(), m_pd3dUploadBuffer.Get());
 
 	D3D12_STREAM_OUTPUT_BUFFER_VIEW d3dSOBufferView[1] = { m_d3dStreamOutputBufferView };
 	pd3dCommandList->SOSetTargets(0, 1, d3dSOBufferView);
@@ -573,13 +574,48 @@ void CParticleMesh::OnePathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommand
 // 파이프라인 바꾸고 출력
 void CParticleMesh::TwoPathRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
+	D3D12_RESOURCE_BARRIER d3dRB;
+	::ZeroMemory(&d3dRB, sizeof(D3D12_RESOURCE_BARRIER));
+	d3dRB.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	d3dRB.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	d3dRB.Transition.pResource = m_pFilledSizeBuffer.Get();
+	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_STREAM_OUT;
+	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+	d3dRB.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	pd3dCommandList->ResourceBarrier(1, &d3dRB);
+
+	pd3dCommandList->CopyResource(m_pd3dReadBackBuffer.Get(), m_pFilledSizeBuffer.Get());
+
+	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_STREAM_OUT;
+
+	pd3dCommandList->ResourceBarrier(1, &d3dRB);
+
 	pd3dCommandList->SOSetTargets(0, 1, NULL);
 	CMesh::Render(pd3dCommandList);
 }
 
 // ReadBack 버퍼를 읽는다.
-void CParticleMesh::PostRender()
+void CParticleMesh::PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
+	D3D12_RESOURCE_BARRIER d3dRB;
+	::ZeroMemory(&d3dRB, sizeof(D3D12_RESOURCE_BARRIER));
+	d3dRB.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	d3dRB.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	d3dRB.Transition.pResource = m_pd3dStreamOutput.Get();
+	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_STREAM_OUT;
+	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+	d3dRB.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	pd3dCommandList->ResourceBarrier(1, &d3dRB);
+
+	d3dRB.Transition.pResource = m_pd3dDrawBuffer.Get();
+	d3dRB.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+	d3dRB.Transition.StateAfter = D3D12_RESOURCE_STATE_STREAM_OUT;
+
+	pd3dCommandList->ResourceBarrier(1, &d3dRB);
+
 	m_pd3dStreamOutput.Swap(m_pd3dDrawBuffer);
 
 	UINT64* pFilledSize = nullptr;

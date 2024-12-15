@@ -39,11 +39,14 @@ public:
 	virtual void Animate(float fElapsedTime) {}
 
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
+
+	virtual void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {}
 protected:
 	ComPtr<ID3D12RootSignature> m_pd3dRootSignature{ nullptr };
 	std::shared_ptr<CCamera> m_pCamera;
 
 	std::shared_ptr<CShader> m_pCurrentSetShader{ nullptr };	// 현재 pipeline에 set돼있는 pipelineState를 저장
+
 };
 
 class CMenuScene : public CScene {
@@ -68,6 +71,8 @@ public:
 	void Animate(float fElapsedTime);
 
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 private:
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 	std::unique_ptr<CSkyBoxObject> m_pSkyBox;
@@ -75,7 +80,14 @@ private:
 	std::unique_ptr<DirLight> m_pLight;
 	std::unique_ptr<CGameObject> m_pWater;
 	std::vector<std::unique_ptr<HGameObject>> m_vOpposite;
+
+	std::unique_ptr<CSmogObject> m_pSmog;
+	std::unique_ptr<CSmogObject> m_pSmog1;
+
 	std::array<bool, 3> m_bAlive{ true, true, true };
 	std::array<float, 3> m_fResurrection{};
 	bool autoPilot{ false };
+
+	ComPtr<ID3D12Resource> m_pd3dElapsed;
+	float* m_pMappedElapsed;
 };

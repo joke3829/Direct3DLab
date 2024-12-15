@@ -39,17 +39,11 @@ void CGameFramework::CreateDevice()
 {
 	::CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&m_pdxgiFactory);
 	IDXGIAdapter* pdxgiAdapter{ nullptr };
+	DXGI_ADAPTER_DESC dxgiAdapterDesc;
 	for (UINT i = 0; m_pdxgiFactory->EnumAdapters(i, &pdxgiAdapter) != DXGI_ERROR_NOT_FOUND; ++i) {
-		if(i == 0)
-			::D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)&m_pd3dDevice);
-		else {
-			DXGI_ADAPTER_DESC dxgiAdapterDesc;
-			pdxgiAdapter->GetDesc(&dxgiAdapterDesc);
-			if (wcscmp(dxgiAdapterDesc.Description, L"NVIDIA")) {
-				::D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)&m_pd3dDevice);
-				break;
-			}
-		}
+		pdxgiAdapter->GetDesc(&dxgiAdapterDesc);
+		if (SUCCEEDED(::D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)m_pd3dDevice.GetAddressOf())))
+			break;
 	}
 	if (!pdxgiAdapter) {
 		m_pdxgiFactory->EnumWarpAdapter(__uuidof(IDXGIAdapter), (void**)&pdxgiAdapter);
@@ -333,6 +327,8 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 
 	WaitForGPUComplete();
+
+	m_pScene->PostRender(m_pd3dCommandList);
 
 	m_pdxgiSwapChain->Present(0, 0);
 
