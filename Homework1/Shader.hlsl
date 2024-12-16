@@ -82,6 +82,11 @@ cbuffer ElapsedInfo : register(b5)
 {
     float fElapsedTime;
 }
+// 반사 행렬
+cbuffer ReflectFeature : register(b6)
+{
+    matrix gmtxReflect : packoffset(c0);
+}
 
 Texture2D gtxtTexture : register(t0);
 Texture2D gTerrainBaseTexture : register(t1);

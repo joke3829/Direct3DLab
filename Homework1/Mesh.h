@@ -128,7 +128,7 @@ class CTexturedSquareMesh : public CMesh {
 public:
 	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, float width = 1.0f, float height = 1.0f);
 	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, 방향 arrow);
-
+	CTexturedSquareMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, 방향 arrow, float fSize);
 	//void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
 	std::vector<TexturedVertex> m_vVertices;

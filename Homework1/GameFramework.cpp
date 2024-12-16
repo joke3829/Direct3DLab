@@ -169,6 +169,8 @@ void CGameFramework::BuildObject()
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
 
 	m_pScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
+	if (m_pSubScene)
+		m_pSubScene->BuildObject(m_pd3dDevice, m_pd3dCommandList);
 
 	m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandList[]{ m_pd3dCommandList.Get()};
@@ -203,6 +205,28 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
 			break;
+		case 'Q':
+		case 'q':
+			if (m_nProgramState == 거울방) {
+				m_pScene.swap(m_pSubScene);
+				m_pCamera->SetThirdPerson(true);
+				m_pCamera->SetCameraEye(XMFLOAT3(0.0, 0.0, 0.0));
+				m_nProgramState = 인게임;
+			}
+			else
+				m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
+		case 'm':
+		case 'M':
+			if (m_nProgramState == 인게임) {
+				m_pScene.swap(m_pSubScene);
+				m_pCamera->SetThirdPerson(false);
+				m_pCamera->SetCameraEye(XMFLOAT3(0.0, 0.0, 0.0));
+				m_nProgramState = 거울방;
+			}
+			else
+				m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 			break;
@@ -210,10 +234,6 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARA
 		break;
 	case WM_KEYUP:
 		switch (wParam) {
-		case 'w':
-		case 'W':
-			//m_pCamera->forward = false;
-			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 			break;
@@ -232,6 +252,9 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM w
 			m_pScene.reset();
 			m_pScene = std::make_unique<CIngameScene>();
 			m_pScene->SetCamera(m_pCamera);
+			m_pSubScene = std::make_unique<CRoomScene>();
+			m_pSubScene->SetCamera(m_pCamera);
+
 			BuildObject();
 			m_pCamera->SetCameraEye(XMFLOAT3(0.0, 50.0, 0.0));
 			m_nProgramState = 인게임;
@@ -243,6 +266,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM w
 		}
 		break;
 	case 인게임:
+	case 거울방:
 		switch (nMessage) {
 		case WM_MOUSEMOVE: {
 			POINT currentCursor;

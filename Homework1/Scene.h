@@ -33,6 +33,8 @@ public:
 
 	void SetCamera(std::shared_ptr<CCamera>& pCamera);
 
+	void SetThirdPersonCamera(bool bThirdPerson);
+
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParma, LPARAM lParam) {};
 	virtual void ProcessInput(float fElapsedTime) {}
 
@@ -90,4 +92,18 @@ private:
 
 	ComPtr<ID3D12Resource> m_pd3dElapsed;
 	float* m_pMappedElapsed;
+};
+
+class CRoomScene : public CScene {
+public:
+	void BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void ProcessInput(float fElapsedTime);
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+protected:
+	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
+	std::unique_ptr<CShader> m_pStandardShader;
+	std::unique_ptr<CShader> m_pReflectShader;
 };

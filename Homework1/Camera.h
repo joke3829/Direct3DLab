@@ -20,6 +20,8 @@ public:
 
 	void SetTarget(HGameObject* target);
 
+	void SetThirdPerson(bool ThirdPerson);
+
 	void SetCameraEye(XMFLOAT3 xmf3Eye);
 	void SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 

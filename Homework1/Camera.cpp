@@ -50,6 +50,11 @@ void CCamera::SetTarget(HGameObject* target)
 	}
 }
 
+void CCamera::SetThirdPerson(bool bThirdPerson)
+{
+	m_bThirdPerson = bThirdPerson;
+}
+
 void CCamera::SetCameraEye(XMFLOAT3 xmf3Eye)
 {
 	m_xmf3Eye = xmf3Eye;

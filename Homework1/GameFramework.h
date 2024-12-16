@@ -7,7 +7,7 @@
 #include "Timer.h"
 #include "Scene.h"
 
-enum ProgramState { 메인메뉴, 인게임 };
+enum ProgramState { 메인메뉴, 인게임, 거울방 };
 
 class CGameFramework {
 public:
@@ -68,6 +68,8 @@ private:
 	std::shared_ptr<CCamera> m_pCamera;
 
 	std::unique_ptr<CScene> m_pScene;
+	std::unique_ptr<CScene> m_pSubScene;	// 거울방을 저장하기 위한 장면
+
 	ProgramState m_nProgramState;
 
 	POINT ClientCenter;

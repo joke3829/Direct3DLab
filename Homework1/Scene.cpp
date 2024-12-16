@@ -50,8 +50,8 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dTerrainRange[1].OffsetInDescriptorsFromTableStart = 1;
 
 	// 0. 카메라 정보, 1. 월드, 텍스처 테이블, 2. 지형, 3. 방향성 조명,
-	// 4. 경과시간
-	D3D12_ROOT_PARAMETER d3dRootParameter[5];
+	// 4. 경과시간, 5. 반사 행렬
+	D3D12_ROOT_PARAMETER d3dRootParameter[6];
 	d3dRootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	d3dRootParameter[0].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[0].Descriptor.ShaderRegister = 0;
@@ -76,6 +76,11 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	d3dRootParameter[4].Descriptor.RegisterSpace = 0;
 	d3dRootParameter[4].Descriptor.ShaderRegister = 5;
 	d3dRootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	d3dRootParameter[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	d3dRootParameter[5].Descriptor.RegisterSpace = 0;
+	d3dRootParameter[5].Descriptor.ShaderRegister = 6;
+	d3dRootParameter[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	
 	D3D12_STATIC_SAMPLER_DESC d3dStaticSamplerDesc;
 	::ZeroMemory(&d3dStaticSamplerDesc, sizeof(D3D12_STATIC_SAMPLER_DESC));
@@ -96,7 +101,7 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
 	d3dRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
-	d3dRootSignatureDesc.NumParameters = 5;
+	d3dRootSignatureDesc.NumParameters = 6;
 	d3dRootSignatureDesc.NumStaticSamplers = 1;
 	d3dRootSignatureDesc.pParameters = d3dRootParameter;
 	d3dRootSignatureDesc.pStaticSamplers = &d3dStaticSamplerDesc;
@@ -115,6 +120,11 @@ void CScene::CreateRootSignature(ComPtr<ID3D12Device>& pd3dDevice)
 void CScene::SetCamera(std::shared_ptr<CCamera>& pCamera)
 {
 	m_pCamera = pCamera;
+}
+
+void CScene::SetThirdPersonCamera(bool bThirdPerson)
+{
+	m_pCamera->SetThirdPerson(bThirdPerson);
 }
 
 //========================================================================
@@ -476,4 +486,75 @@ void CIngameScene::PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList
 {
 	m_pSmog->PostRender(pd3dCommandList);
 	m_pSmog1->PostRender(pd3dCommandList);
+}
+
+//=================================================
+
+void CRoomScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	CreateRootSignature(pd3dDevice);
+	std::shared_ptr<CMesh> pMesh;
+	std::shared_ptr<CSingleTexture> pMaterial;
+	// 0~5 벽
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Stone.dds", true);
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 좌, 200.0f);
+	m_vObjects[0]->SetMesh(pMesh); m_vObjects[0]->SetMaterial(pMaterial);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 우, 200.0f);
+	m_vObjects[1]->SetMesh(pMesh); m_vObjects[1]->SetMaterial(pMaterial);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 상, 200.0f);
+	m_vObjects[2]->SetMesh(pMesh); m_vObjects[2]->SetMaterial(pMaterial);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 하, 200.0f);
+	m_vObjects[3]->SetMesh(pMesh); m_vObjects[3]->SetMaterial(pMaterial);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 앞, 200.0f);
+	m_vObjects[4]->SetMesh(pMesh); m_vObjects[4]->SetMaterial(pMaterial);
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 뒤, 200.0f);
+	m_vObjects[5]->SetMesh(pMesh); m_vObjects[5]->SetMaterial(pMaterial);
+
+
+	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
+		temp->CreateResourceView(pd3dDevice);
+	}
+
+	// shaders
+	m_pStandardShader = std::make_unique<CMenuShader>(); m_pStandardShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+
+}
+
+void CRoomScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+
+}
+
+void CRoomScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->move();
+}
+void CRoomScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+{
+	m_pCurrentSetShader.reset();
+	pd3dCommandList->SetGraphicsRootSignature(m_pd3dRootSignature.Get());
+	m_pCamera->SetViewportAndScissorRect(pd3dCommandList);
+	m_pCamera->UpdateShaderVariables(pd3dCommandList);
+
+	// 1. 일반 객체 그리기
+	m_pStandardShader->SetPipelineState(pd3dCommandList);
+
+	for (std::unique_ptr<CGameObject>& temp : m_vObjects)
+		temp->Render(pd3dCommandList, m_pCurrentSetShader);
+
 }
