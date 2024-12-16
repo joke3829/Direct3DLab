@@ -452,6 +452,7 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsC
 			float xPosition = x * m_xmf3Scale.x, zPosition = z * m_xmf3Scale.z;
 			fHeight = pHeightMapImage->GetHeight(xPosition, zPosition, m_xmf3Scale);
 			pVertices[i].m_xmf3Position = XMFLOAT3(xPosition, fHeight, zPosition);
+			//pVertices[i].m_xmf3Position = XMFLOAT3(xPosition, 0.0, zPosition);
 			pVertices[i].m_xmf4Diffuse = Vector4::Add(OnGetColor(int(x), int(z), pContext), xmf4Color);
 			pVertices[i].m_xmf2TexCoord0 = XMFLOAT2(float(x) / float(cxHeightMap - 1), float(czHeightMap - 1 - z) / float(czHeightMap - 1));
 			pVertices[i].m_xmf2TexCoord1 = XMFLOAT2(float(x) / float(m_xmf3Scale.x * 0.5f), float(z) / float(m_xmf3Scale.z * 0.5f));

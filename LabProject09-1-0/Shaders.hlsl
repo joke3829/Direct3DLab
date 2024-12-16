@@ -337,8 +337,8 @@ struct DS_TERRAIN_TESSELLATION_OUTPUT
 };
 
 [domain("quad")]
-//[partitioning("fractional_even")]
-[partitioning("integer")]
+[partitioning("fractional_even")]
+//[partitioning("integer")]
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(25)]
 [patchconstantfunc("HSTerrainTessellationConstant")]
@@ -396,6 +396,7 @@ HS_TERRAIN_TESSELLATION_CONSTANT HSTerrainTessellationConstant(InputPatch<VS_TER
 		output.fTessInsides[1] = 20.0f;
 	}
 
+	
 	return(output);
 }
 

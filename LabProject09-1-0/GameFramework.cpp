@@ -504,6 +504,7 @@ void CGameFramework::UpdateShaderVariables()
 {
 	m_pcbMappedFrameworkInfo->m_fCurrentTime = m_GameTimer.GetTotalTime();
 	m_pcbMappedFrameworkInfo->m_fElapsedTime = m_GameTimer.GetTimeElapsed();
+	
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbFrameworkInfo->GetGPUVirtualAddress();
 	m_pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dGpuVirtualAddress);
