@@ -405,6 +405,102 @@ CTexturedCubeMesh::CTexturedCubeMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID
 	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
 }
 
+CTexturedNoLightingCubeMesh::CTexturedNoLightingCubeMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, XMFLOAT3 extent)
+{
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	m_OBB = BoundingOrientedBox(XMFLOAT3(0.0, 0.0, 0.0), extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
+	m_vVertices.reserve(24);
+	float x = extent.x;
+	float y = extent.y;
+	float z = extent.z;
+	// -z
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, -z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, -z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, -z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, -z), XMFLOAT2(0.0, 1.0)));
+	// x
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, -z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, -z), XMFLOAT2(0.0, 1.0)));
+	// z
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, z), XMFLOAT2(0.0, 1.0)));
+	// -x
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, -z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, -z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, z), XMFLOAT2(0.0, 1.0)));
+	// y
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, y, -z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, y, -z), XMFLOAT2(0.0, 1.0)));
+	//-y
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, -z), XMFLOAT2(0.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, -z), XMFLOAT2(1.0, 0.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(x, -y, z), XMFLOAT2(1.0, 1.0)));
+	m_vVertices.push_back(TexturedVertex(XMFLOAT3(-x, -y, z), XMFLOAT2(0.0, 1.0)));
+
+	m_nVertices = m_vVertices.size();
+	m_vIndices.reserve(36);
+	// 0~3 -z
+	m_vIndices.push_back(0);
+	m_vIndices.push_back(1);
+	m_vIndices.push_back(2);
+	m_vIndices.push_back(0);
+	m_vIndices.push_back(2);
+	m_vIndices.push_back(3);
+	// 4~7 x
+	m_vIndices.push_back(4);
+	m_vIndices.push_back(5);
+	m_vIndices.push_back(6);
+	m_vIndices.push_back(4);
+	m_vIndices.push_back(6);
+	m_vIndices.push_back(7);
+	// 8~11 z
+	m_vIndices.push_back(8);
+	m_vIndices.push_back(9);
+	m_vIndices.push_back(10);
+	m_vIndices.push_back(8);
+	m_vIndices.push_back(10);
+	m_vIndices.push_back(11);
+	// 12~15 -x
+	m_vIndices.push_back(12);
+	m_vIndices.push_back(13);
+	m_vIndices.push_back(14);
+	m_vIndices.push_back(12);
+	m_vIndices.push_back(14);
+	m_vIndices.push_back(15);
+	// 16~19 y
+	m_vIndices.push_back(16);
+	m_vIndices.push_back(17);
+	m_vIndices.push_back(18);
+	m_vIndices.push_back(16);
+	m_vIndices.push_back(18);
+	m_vIndices.push_back(19);
+	// 20~23 -y
+	m_vIndices.push_back(20);
+	m_vIndices.push_back(21);
+	m_vIndices.push_back(22);
+	m_vIndices.push_back(20);
+	m_vIndices.push_back(22);
+	m_vIndices.push_back(23);
+	m_nIndices = m_vIndices.size();
+
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dVertexUploadBuffer, m_vVertices, m_pd3dVertexBuffer);
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.SizeInBytes = sizeof(TexturedVertex) * m_nVertices;
+	m_d3dVertexBufferView.StrideInBytes = sizeof(TexturedVertex);
+
+	::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pd3dIndexUploadBuffer, m_vIndices, m_pd3dIndexBuffer);
+	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
+	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
+}
+
 //=========================================================================
 
 HMesh::HMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::ifstream& inFile)

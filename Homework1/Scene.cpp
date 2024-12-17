@@ -493,34 +493,59 @@ void CIngameScene::PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList
 void CRoomScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
 	CreateRootSignature(pd3dDevice);
+	XMFLOAT4X4 temp;
+	::CreateBufferResource(pd3dDevice, m_pd3dReflectBuffer, temp);
+	m_pd3dReflectBuffer->Map(0, NULL, (void**)&m_pMappedMatrix);
+
 	std::shared_ptr<CMesh> pMesh;
 	std::shared_ptr<CSingleTexture> pMaterial;
 	// 0~5 벽
 	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Stone.dds", true);
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 좌, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 앞, 180.0f);
 	m_vObjects[0]->SetMesh(pMesh); m_vObjects[0]->SetMaterial(pMaterial);
 
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 우, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 뒤, 180.0f);
 	m_vObjects[1]->SetMesh(pMesh); m_vObjects[1]->SetMaterial(pMaterial);
 
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 상, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 상, 180.0f);
 	m_vObjects[2]->SetMesh(pMesh); m_vObjects[2]->SetMaterial(pMaterial);
 
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 하, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 하, 180.0f);
 	m_vObjects[3]->SetMesh(pMesh); m_vObjects[3]->SetMaterial(pMaterial);
 
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 앞, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 좌, 180.0f);
 	m_vObjects[4]->SetMesh(pMesh); m_vObjects[4]->SetMaterial(pMaterial);
 
 	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
-	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 뒤, 200.0f);
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 우, 180.0f);
 	m_vObjects[5]->SetMesh(pMesh); m_vObjects[5]->SetMaterial(pMaterial);
 
+	// 6~8 객체
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedNoLightingCubeMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(15.0, 50.0, 15.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Ceiling.dds", true);
+	m_vObjects[6]->SetMesh(pMesh); m_vObjects[6]->SetMaterial(pMaterial); m_vObjects[6]->SetPosition(XMFLOAT3(0.0, 20.0, 60.0));
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedNoLightingCubeMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(30.0, 30.0, 30.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\Lava(Diffuse).dds", true);
+	m_vObjects[7]->SetMesh(pMesh); m_vObjects[7]->SetMaterial(pMaterial); m_vObjects[7]->SetPosition(XMFLOAT3(50.0, -80.0, 100.0));
+
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedNoLightingCubeMesh>(pd3dDevice, pd3dCommandList, XMFLOAT3(13.0, 13.0, 60.0));
+	pMaterial = std::make_shared<CSingleTexture>(pd3dDevice, pd3dCommandList, L"texture\\skybox\\SkyBox_Back_0.dds", true);
+	m_vObjects[8]->SetMesh(pMesh); m_vObjects[8]->SetMaterial(pMaterial); m_vObjects[8]->SetPosition(XMFLOAT3(-70.0, -10.0, -20.0));
+
+	// 9 거울
+	m_vObjects.push_back(std::make_unique<CGameObject>(pd3dDevice, pd3dCommandList));
+	pMesh = std::make_shared<CTexturedSquareMesh>(pd3dDevice, pd3dCommandList, 320.0f, 320.0f);
+	m_vObjects[9]->SetMesh(pMesh); m_vObjects[9]->SetMaterial(pMaterial); m_vObjects[9]->SetPosition(XMFLOAT3(0.0f, 0.0f, 179.0f));
 
 	for (std::unique_ptr<CGameObject>& temp : m_vObjects) {
 		temp->CreateResourceView(pd3dDevice);
@@ -528,7 +553,10 @@ void CRoomScene::BuildObject(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 
 	// shaders
 	m_pStandardShader = std::make_unique<CMenuShader>(); m_pStandardShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
-
+	m_pMirrorInitShader = std::make_unique<CMirrorInitializeShader>(); m_pMirrorInitShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pDepthInitShader = std::make_unique<CMirrorDepthInitShader>(); m_pDepthInitShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pReflectShader = std::make_unique<CReflectShader>(); m_pReflectShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
+	m_pBlendMirrorShader = std::make_unique<CBlendMirrorShader>(); m_pBlendMirrorShader->CreatePipelineState(pd3dDevice, m_pd3dRootSignature);
 }
 
 void CRoomScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -542,7 +570,13 @@ void CRoomScene::ProcessInput(float fElapsedTime)
 	GetKeyboardState(keyBuffer);
 
 	if (keyBuffer['W'] & 0x80)
-		m_pCamera->move();
+		m_pCamera->move(앞, fElapsedTime);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->move(좌, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->move(뒤, fElapsedTime);
+	if (keyBuffer['D'] & 0x80)
+		m_pCamera->move(우, fElapsedTime);
 }
 void CRoomScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 {
@@ -554,7 +588,31 @@ void CRoomScene::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
 	// 1. 일반 객체 그리기
 	m_pStandardShader->SetPipelineState(pd3dCommandList);
 
-	for (std::unique_ptr<CGameObject>& temp : m_vObjects)
-		temp->Render(pd3dCommandList, m_pCurrentSetShader);
+	for (int i = 0; i < 9; ++i) {
+		m_vObjects[i]->Render(pd3dCommandList, m_pCurrentSetShader);
+	}
 
+	m_pMirrorInitShader->SetPipelineState(pd3dCommandList);
+	// 2. 거울 스텐실 초기화
+	pd3dCommandList->OMSetStencilRef(0xff);
+	m_vObjects[9]->Render(pd3dCommandList, m_pCurrentSetShader);
+
+	// 3. 거울 깊이 초기화
+	m_pDepthInitShader->SetPipelineState(pd3dCommandList);
+	m_vObjects[9]->Render(pd3dCommandList, m_pCurrentSetShader);
+
+	XMVECTOR reflectPlane = XMVectorSet(0.0, 0.0, -1.0, 179.0f);
+	XMStoreFloat4x4(m_pMappedMatrix, XMMatrixTranspose(XMMatrixReflect(reflectPlane)));
+	pd3dCommandList->SetGraphicsRootConstantBufferView(5, m_pd3dReflectBuffer->GetGPUVirtualAddress());
+
+	// 4. 반사된 객체 그리기
+	m_pReflectShader->SetPipelineState(pd3dCommandList);
+	for (int i = 1; i < 9; ++i) {
+		m_vObjects[i]->Render(pd3dCommandList, m_pCurrentSetShader);
+	}
+
+	// 5. 거울 블렌딩
+
+	m_pBlendMirrorShader->SetPipelineState(pd3dCommandList);
+	m_vObjects[9]->Render(pd3dCommandList, m_pCurrentSetShader);
 }

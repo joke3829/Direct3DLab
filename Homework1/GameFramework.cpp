@@ -334,6 +334,7 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandleD, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dCPUHandle, TRUE, &d3dCPUHandleD);
+	m_pd3dCommandList->OMSetStencilRef(0x00);
 	//====================================
 	//m_pCamera->move();
 	//=====================================

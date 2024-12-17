@@ -630,6 +630,7 @@ void CPlanarMirrorShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCa
 	if (m_ppd3dPipelineStates[3]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[3]); //Clear Depth Mirror
 	m_pMirrorObject->Render(pd3dCommandList, pCamera);
 
+	//XMVECTOR xmvMirrorPlane = XMVectorSet(0.0f, 0.0f, 1.0f, -1120.05f);
 	XMVECTOR xmvMirrorPlane = XMVectorSet(0.0f, 0.0f, 1.0f, -1120.05f);
 	XMStoreFloat4x4(&m_pcbMappedReflection->m_xmf4x4Reflect, XMMatrixTranspose(XMMatrixReflect(xmvMirrorPlane)));
 	pd3dCommandList->SetGraphicsRootConstantBufferView(6, m_pd3dcbReflection->GetGPUVirtualAddress());

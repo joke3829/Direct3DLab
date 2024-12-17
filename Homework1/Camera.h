@@ -16,7 +16,7 @@ public:
 	virtual void UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
 	void Rotate(int cxDelta, int cyDelta);
-	void move();
+	void move(방향 arrow ,float fElapsedTime);
 
 	void SetTarget(HGameObject* target);
 
@@ -50,7 +50,7 @@ protected:
 	float m_fFOV = 60.0f;
 	float m_fAspect = 1280.0f / 720.0f;
 	float m_fNear = 1.0f;
-	float m_fFar = 500.0f;
+	float m_fFar = 800.0f;
 
 
 	// 뷰 프러스텀 추가하자

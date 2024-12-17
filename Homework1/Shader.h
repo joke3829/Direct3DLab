@@ -102,3 +102,35 @@ public:
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 	D3D12_RASTERIZER_DESC CreateRasterizerDesc();
 };
+
+//=================================================================
+
+class CMirrorInitializeShader : public CShader {
+public:
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
+};
+
+class CMirrorDepthInitShader : public CShader {
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
+};
+
+class CReflectShader : public CShader {
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
+	virtual D3D12_RASTERIZER_DESC CreateRasterizerDesc();
+};
+
+class CBlendMirrorShader : public CShader {
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_BLEND_DESC CreateBlendDesc();
+};

@@ -103,7 +103,13 @@ public:
 	void ProcessInput(float fElapsedTime);
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 protected:
+	ComPtr<ID3D12Resource> m_pd3dReflectBuffer;
+	XMFLOAT4X4* m_pMappedMatrix;
+
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects;
 	std::unique_ptr<CShader> m_pStandardShader;
+	std::unique_ptr<CShader> m_pMirrorInitShader;
+	std::unique_ptr<CShader> m_pDepthInitShader;
 	std::unique_ptr<CShader> m_pReflectShader;
+	std::unique_ptr<CShader> m_pBlendMirrorShader;
 };

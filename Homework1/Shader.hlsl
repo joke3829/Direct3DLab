@@ -242,7 +242,7 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
     return (output);
 }
 
-[earlydeapthstencil]
+[earlydepthstencil]
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
     float4 pixelColor = gtxtTexture.Sample(gStaticSampler, input.uv);
@@ -319,7 +319,7 @@ void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUT
     }
 }
 
-[earlydeathstencil]
+[earlydepthstencil]
 float4 PSBillboard(GS_OUTPUT input) : SV_TARGET
 {
     float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
@@ -415,7 +415,7 @@ void GSDrawParticle(point VS_PARTICLE_POINT input[1], inout TriangleStream<GS_OU
     }
 }
 
-[earlydeathstencil]
+[earlydepthstencil]
 float4 PSDrawParticle(GS_OUTPUT input) : SV_TARGET
 {
     float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
@@ -446,4 +446,38 @@ float4 VSWater(float3 input : POSITION) : SV_POSITION
 float4 PSWater(float4 input : SV_POSITION) : SV_TARGET
 {
     return float4(0.0, 0.0, 1.0, 0.5);
+}
+
+
+//=============================================
+
+
+VS_NLightTextured_OUTPUT VSMirrorDepthInit(VS_NLightTextred_INPUT input)
+{
+    VS_NLightTextured_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), gmtxProj).xyzz;
+    output.uv = input.uv;
+    
+    return output;
+}
+
+[earlydepthstencil]
+float4 PSMirrorInitialize(VS_NLightTextured_OUTPUT input) : SV_TARGET
+{
+    return float4(1.0, 1.0, 1.0, 1.0);
+}
+
+[earlydepthstencil]
+float4 PSBlendMirror(VS_NLightTextured_OUTPUT input) : SV_TARGET
+{
+    return float4(0.8, 0.8, 0.8, 0.2);
+}
+
+VS_NLightTextured_OUTPUT VSReflect(VS_NLightTextred_INPUT input)
+{
+    VS_NLightTextured_OUTPUT output;
+    output.position = mul(mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxReflect), gmtxView), gmtxProj);
+    output.uv = input.uv;
+    
+    return output;
 }

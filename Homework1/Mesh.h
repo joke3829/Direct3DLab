@@ -143,6 +143,14 @@ protected:
 	std::vector<UINT> m_vIndices;
 };
 
+class CTexturedNoLightingCubeMesh : public CMesh {
+public:
+	CTexturedNoLightingCubeMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, XMFLOAT3 extent);
+protected:
+	std::vector<TexturedVertex> m_vVertices;
+	std::vector<UINT> m_vIndices;
+};
+
 //=============================================================================
 
 class CHeightMapImage {
