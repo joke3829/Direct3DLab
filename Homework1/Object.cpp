@@ -152,11 +152,11 @@ void CGameObject::UpdateOBB()
 	XMStoreFloat4(&m_OBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&m_OBB.Orientation)));
 }
 
-void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+void CGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader)
 {
 	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
 	SetShaderVariables(pd3dCommandList);
-	if (m_pShader && m_pShader != currentSetShader) {
+	if (bUseOwnShader && m_pShader && m_pShader != currentSetShader) {
 		m_pShader->SetPipelineState(pd3dCommandList);
 		currentSetShader = m_pShader;
 	}
@@ -254,12 +254,12 @@ void BulletObject::Animate(float fElapsedTime)
 	}
 }
 
-void BulletObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+void BulletObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader)
 {
 	if (m_bExist) {
 		pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
 		SetShaderVariables(pd3dCommandList);
-		if (m_pShader && m_pShader != currentSetShader) {
+		if (bUseOwnShader && m_pShader && m_pShader != currentSetShader) {
 			m_pShader->SetPipelineState(pd3dCommandList);
 			currentSetShader = m_pShader;
 		}
@@ -713,7 +713,7 @@ void HGameObject::move(eDirection dir, float fElapsedTime)
 	SetPosition(cPos);
 }
 
-void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader)
+void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader)
 {
 	if (m_pChild) {
 		XMFLOAT4X4 xmf4x4;
@@ -725,7 +725,7 @@ void HGameObject::Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std
 	// ·»´õ¸µ ÄÚµå
 	pd3dCommandList->SetDescriptorHeaps(1, m_pd3dCbvSrvDescriptor.GetAddressOf());
 	SetShaderVariables(pd3dCommandList);
-	if (m_pShader && m_pShader != currentSetShader) {
+	if (bUseOwnShader && m_pShader && m_pShader != currentSetShader) {
 		m_pShader->SetPipelineState(pd3dCommandList);
 		currentSetShader = m_pShader;
 	}

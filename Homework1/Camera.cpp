@@ -60,13 +60,13 @@ void CCamera::SetCameraEye(XMFLOAT3 xmf3Eye)
 	m_xmf3Eye = xmf3Eye;
 }
 
-void CCamera::UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
+void CCamera::UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, UINT nRootParameterIndex)
 {
 	UpdateViewMatrix();
 
 	XMStoreFloat4x4(&(m_cInfoBegin->xmf4x4Proj), XMMatrixTranspose(XMLoadFloat4x4(&(m_cameraInfo.xmf4x4Proj))));
 	//m_cInfoBegin->xmf4x4Proj = m_cameraInfo.xmf4x4Proj;
-	pd3dCommandList->SetGraphicsRootConstantBufferView(0, m_pd3dCameraBuffer->GetGPUVirtualAddress());
+	pd3dCommandList->SetGraphicsRootConstantBufferView(nRootParameterIndex, m_pd3dCameraBuffer->GetGPUVirtualAddress());
 }
 
 void CCamera::SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList)
@@ -145,4 +145,15 @@ void CCamera::move(πÊ«‚ arrow, float fElapsedTime)
 XMFLOAT3 CCamera::getCameraEye() const
 {
 	return m_xmf3Eye;
+}
+
+void CCamera::SetDir(XMFLOAT3 xmf3Dir)
+{
+	XMStoreFloat3(&m_xmf3Dir ,XMVector3Normalize(XMLoadFloat3(&xmf3Dir)));
+}
+
+void CCamera::SetOrthoMatrix(float fWidth, float fHeight, float fNear, float fFar)
+{
+	XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixOrthographicLH(fWidth, fHeight, fNear, fFar));
+	//XMStoreFloat4x4(&(m_cameraInfo.xmf4x4Proj), XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0f), 1.0f, 200.0f, 800.0f));
 }

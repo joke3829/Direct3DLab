@@ -139,4 +139,6 @@ void CreateBufferResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resourc
 
 void CreateBufferResourceS(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>& pd3dResource, UINT64 nBytes, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceState);
 
+void CreateTexture2DResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>& pd3dResource, UINT nWidth, UINT nHeight, D3D12_RESOURCE_FLAGS d3dResourceFlag, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_STATES d3dResourceState);
+
 enum eDirection { DIR_FORWARD, DIR_BACK, DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN };

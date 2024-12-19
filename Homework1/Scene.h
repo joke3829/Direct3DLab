@@ -16,6 +16,7 @@ struct LightInfo {
 	XMFLOAT3 xmf3Dir;
 };
 
+
 class DirLight {
 public:
 	DirLight(ComPtr<ID3D12Device>& pd3dDevice);
@@ -24,6 +25,11 @@ public:
 protected:
 	LightInfo* m_pLightInfo = nullptr;
 	ComPtr<ID3D12Resource> m_pd3dMappedLight;
+};
+
+struct FrameInfo {
+	float m_fElapsedTime = 0.0f;
+	bool m_bShowShadowMap = false;
 };
 
 class CScene {
@@ -40,6 +46,7 @@ public:
 
 	virtual void Animate(float fElapsedTime) {}
 
+	virtual void PreRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {}
 	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {};
 
 	virtual void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList) {}
@@ -72,6 +79,7 @@ public:
 	void ProcessInput(float fElapsedTime);
 	void Animate(float fElapsedTime);
 
+	void PreRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
 	void PostRender(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
@@ -91,7 +99,19 @@ private:
 	bool autoPilot{ false };
 
 	ComPtr<ID3D12Resource> m_pd3dElapsed;
-	float* m_pMappedElapsed;
+	FrameInfo* m_pMappedInfo;
+	bool m_bShowShadowMap = false;
+
+	ComPtr<ID3D12Resource> m_pd3dShadowMap;
+	ComPtr<ID3D12DescriptorHeap> m_pd3dSMDescriptorHeap;	// ShadowMap DescriptorHeap
+	ComPtr<ID3D12DescriptorHeap> m_pd3dSMRTVDescriptorHeap;	// ShadowMap - RTV
+
+	ComPtr<ID3D12Resource> m_pShadowDSVBuffer;
+	ComPtr<ID3D12DescriptorHeap> m_pd3dShadowDSVDescriptorHeap;
+
+	std::unique_ptr<CCamera> m_pSubCamera;
+
+	std::vector<std::unique_ptr<CShader>> m_vDepthShaders;
 };
 
 class CRoomScene : public CScene {

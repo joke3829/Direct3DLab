@@ -18,6 +18,8 @@ struct VS_TEXTURED_OUTPUT
     float3 positionW : POSITION;
     float3 normalW : NORMAL;
     float2 uv : TEXCOORD;
+    
+    float4 ShadowCmpPosition : SCMPPOSITION;
 };
 //====================================================
 struct VS_NLightTextred_INPUT
@@ -81,6 +83,7 @@ cbuffer TerrainInfo : register(b4)
 cbuffer ElapsedInfo : register(b5)
 {
     float fElapsedTime;
+    bool bShowShadowMap;
 }
 // 반사 행렬
 cbuffer ReflectFeature : register(b6)
@@ -88,10 +91,21 @@ cbuffer ReflectFeature : register(b6)
     matrix gmtxReflect : packoffset(c0);
 }
 
+// 그림자 맵 비교를 위한 행렬
+cbuffer ShadowCameraInfo : register(b7)
+{
+    matrix gmtxShadowView : packoffset(c0);
+    matrix gmtxShadowProj : packoffset(c4);
+    float3 cameraShadowEye : packoffset(c8);
+}
+
 Texture2D gtxtTexture : register(t0);
 Texture2D gTerrainBaseTexture : register(t1);
 Texture2D gTerrainDetailTexture : register(t2);
+Texture2D gShadowMapTexture : register(t3);
+
 sampler gStaticSampler : register(s0);
+sampler gShadowSampler : register(s1);
 
 //==================================================
 
@@ -102,29 +116,37 @@ VS_TEXTURED_OUTPUT VSTextured(VS_TEXTURED_INPUT input)
     output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxWorld);
     output.normalW = mul(input.normal, (float3x3) gmtxWorld);
     output.uv = input.uv;
+    
+    output.ShadowCmpPosition = mul(mul(float4(output.positionW, 1.0f), gmtxShadowView), gmtxShadowProj);
+    return output;
+}
+
+VS_TEXTURED_OUTPUT VSTexturedDepth(VS_TEXTURED_INPUT input)
+{
+    VS_TEXTURED_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxShadowView), gmtxShadowProj);
+    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxWorld);
+    output.normalW = mul(input.normal, (float3x3) gmtxWorld);
+    output.uv = input.uv;
     return output;
 }
 
 float4 PSTextured(VS_TEXTURED_OUTPUT input) : SV_TARGET
 {
-    float4 pixelColor = gtxtTexture.Sample(gStaticSampler, input.uv);
-    
-    float Diffuse = max(dot(input.normalW, LightDirction), 0.0f);
-    float4 PhongD = Diffuse * cDiffused * pixelColor;
-    
-    float3 Ref1 = 2.0f * input.normalW * dot(input.normalW, LightDirction) - LightDirction;
-    float View = normalize(cameraEye - input.positionW);
-    float Specular = pow(max(dot(Ref1, View), 0.0f), 1.0f);
-    if (Diffuse <= 0.0f)
-        Specular = 0.0f;
-    float4 PhongS = Specular * float4(1.0, 1.0, 1.0, 1.0) * cSpecular;
-    
-    float4 PhongA = cAmbient * pixelColor * 0.2;
-    
-    float4 finalColor = PhongD + PhongS + PhongA;
-    finalColor.w = 1.0f;
-    
-    return finalColor;
+    if (bShowShadowMap)
+    {
+        return gShadowMapTexture.Sample(gShadowSampler, input.uv);
+    }
+    else
+    {
+        return gtxtTexture.Sample(gStaticSampler, input.uv);
+    }
+}
+
+float4 PSTexturedDepth(VS_TEXTURED_OUTPUT input) : SV_TARGET
+{
+    float fDepth = input.position.z; // input.position.w;
+    return float4(fDepth, fDepth, fDepth, 1.0f);
 }
 
 
@@ -170,6 +192,8 @@ struct VS_TERRAIN_OUTPUT
     float4 position : SV_POSITION;
     float2 uv1 : TEXCOORD0;
     float2 uv2 : TEXCOORD1;
+    
+    float4 ShadowCmpPosition : SCMPPOSITION;
 };
 
 VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
@@ -179,6 +203,19 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
     //output.position = mul(float4(input.position, 1.0f), gmtxView);
     output.uv1 = input.uv1;
     output.uv2 = input.uv2;
+    
+    output.ShadowCmpPosition = mul(mul(mul(float4(input.position, 1.0f), gmtxTerrainWorld), gmtxShadowView), gmtxShadowProj);
+    return output;
+}
+
+VS_TERRAIN_OUTPUT VSTerrainDepth(VS_TERRAIN_INPUT input)
+{
+    VS_TERRAIN_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxTerrainWorld), gmtxShadowView), gmtxShadowProj);
+    //output.position = mul(float4(input.position, 1.0f), gmtxView);
+    output.uv1 = input.uv1;
+    output.uv2 = input.uv2;
+    
     return output;
 }
 
@@ -187,7 +224,31 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
     float4 baseColor = gTerrainBaseTexture.Sample(gStaticSampler, input.uv1);
     float4 detailColor = gTerrainDetailTexture.Sample(gStaticSampler, input.uv2);
     
-    return saturate((baseColor * 0.7) + (detailColor * 0.3));
+    //float4 baseColor = gShadowMapTexture.Sample(gStaticSampler, input.uv1);
+    //float4 detailColor = gTerrainDetailTexture.Sample(gStaticSampler, input.uv2);
+    
+    //input.ShadowCmpPosition.xyz /= input.ShadowCmpPosition.w;
+    input.ShadowCmpPosition.x = (input.ShadowCmpPosition.x / 2.0f) + 0.5f;
+    input.ShadowCmpPosition.y = ((input.ShadowCmpPosition.y * -0.5f) + 0.5f);
+    float ShadowMapDepth = gShadowMapTexture.Sample(gShadowSampler, input.ShadowCmpPosition.xy).r;
+    
+    //float LinearDepth = (1.0f / (input.ShadowCmpPosition.z / input.ShadowCmpPosition.w)) - 1.0f;
+    bool bShadow = false;
+    if (ShadowMapDepth + 0.003 < input.ShadowCmpPosition.z)
+        bShadow = true;
+    
+    //return baseColor;
+    
+    if(bShadow)
+        return saturate((baseColor * 0.7) + (detailColor * 0.3)) * 0.3f;
+    else
+        return saturate((baseColor * 0.7) + (detailColor * 0.3));
+}
+
+float4 PSTerrainDepth(VS_TERRAIN_OUTPUT input) : SV_TARGET
+{
+    float fDepth = input.position.z / input.position.w;
+    return float4(fDepth, fDepth, fDepth, 1.0f);
 }
 
 //=====================================
@@ -242,6 +303,20 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
     return (output);
 }
 
+VS_STANDARD_OUTPUT VSStandardDepth(VS_STANDARD_INPUT input)
+{
+    VS_STANDARD_OUTPUT output;
+
+    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxWorld);
+    output.normalW = mul(input.normal, (float3x3) gmtxWorld);
+    output.tangentW = (float3) mul(float4(input.tangent, 1.0f), gmtxWorld);
+    output.bitangentW = (float3) mul(float4(input.bitangent, 1.0f), gmtxWorld);
+    output.position = mul(mul(float4(output.positionW, 1.0f), gmtxShadowView), gmtxShadowProj);
+    output.uv = input.uv;
+
+    return (output);
+}
+
 [earlydepthstencil]
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
@@ -263,6 +338,12 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
     finalColor.w = 1.0f;
     
     return finalColor;
+}
+
+float4 PSStandardDepth(VS_STANDARD_OUTPUT input) : SV_TARGET
+{
+    float fDepth = input.position.z / input.position.w;
+    return float4(fDepth, fDepth, fDepth, 1.0f);
 }
 
 //===============================================
@@ -319,13 +400,15 @@ void GSBillboard(point VS_BILLBOARD_OUTPUT input[1], inout TriangleStream<GS_OUT
     }
 }
 
-[earlydepthstencil]
+//[earlydepthstencil]
 float4 PSBillboard(GS_OUTPUT input) : SV_TARGET
 {
     float4 fTexColor = gtxtTexture.Sample(gStaticSampler, input.uv);
     if(fTexColor.w == 0.0f)
         discard;
     return fTexColor;
+    
+    //return float4(1.0, 0.5, 0.3, 1.0);
 }
 
 

@@ -33,6 +33,13 @@ public:
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 };
 
+class CTexturedDepthShader : public CShader {
+public:
+	virtual void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
 // 메뉴전용 조명을 사용하지 않는 텍스처셰이더
 class CMenuShader : public CShader {
 public:
@@ -50,6 +57,13 @@ public:
 	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 };
 
+class CTerrainDepthShader : public CShader {
+public:
+	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
 class CSkyBoxShader : public CShader {
 public:
 	CSkyBoxShader() {}
@@ -62,6 +76,13 @@ public:
 class CPlayerShader : public CShader {
 public:
 	CPlayerShader() {}
+	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
+
+	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+};
+
+class CPlayerDepthShader : public CShader {
+public:
 	void CreatePipelineState(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12RootSignature>& pd3dRootSignature);
 
 	D3D12_INPUT_LAYOUT_DESC CreateInputLayout();

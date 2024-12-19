@@ -314,6 +314,8 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandAllocator->Reset();
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
 
+	m_pScene->PreRender(m_pd3dCommandList);
+
 	D3D12_RESOURCE_BARRIER d3dResourceBarrier;
 	::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
 	d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

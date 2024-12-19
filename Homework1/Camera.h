@@ -13,7 +13,7 @@ public:
 	CCamera(ComPtr<ID3D12Device>& pd3dDevice);
 	void UpdateViewMatrix();
 	virtual void UpdateProjMatrix(bool bOrtho = false);
-	virtual void UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
+	virtual void UpdateShaderVariables(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, UINT nRootParameterIndex = 0);
 
 	void Rotate(int cxDelta, int cyDelta);
 	void move(πÊ«‚ arrow ,float fElapsedTime);
@@ -26,6 +26,21 @@ public:
 	void SetViewportAndScissorRect(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList);
 
 	XMFLOAT3 getCameraEye() const;
+
+	void SetDir(XMFLOAT3 xmf3Dir);
+	void SetOrthoMatrix(float fWidth, float fHeight, float fNear, float fFar);
+
+	void UpdateViewPort()
+	{
+		m_d3dViewport.Height = 1024;
+		m_d3dViewport.Width = 1024;
+		m_d3dViewport.MaxDepth = 1.0f;
+		m_d3dViewport.MinDepth = 0.0f;
+		m_d3dViewport.TopLeftX = 0;
+		m_d3dViewport.TopLeftY = 0;
+
+		m_d3dScissorRect = { 0, 0, 1024, 1024 };
+	}
 
 protected:
 	bool m_bThirdPerson = false;

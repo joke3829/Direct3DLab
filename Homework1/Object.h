@@ -61,7 +61,7 @@ public:
 
 	void UpdateOBB();
 	
-	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+	virtual void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader = true);
 protected:
 	std::shared_ptr<CMesh> m_pMesh{ nullptr };
 	std::shared_ptr<CShader> m_pShader{ nullptr };
@@ -122,7 +122,7 @@ public:
 	void Animate(float fElapsedTime);
 	void setExist(bool exist) { m_bExist = exist; }
 
-	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader = true);
 protected:
 	CGameObject* m_pPlayer;
 	bool m_bExist;
@@ -155,7 +155,7 @@ public:
 
 	void move(eDirection dir, float fElapsedTime);
 
-	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader);
+	void Render(ComPtr<ID3D12GraphicsCommandList>& pd3dCommandList, std::shared_ptr<CShader>& currentSetShader, bool bUseOwnShader = true);
 protected:
 	std::vector<std::unique_ptr<CSingleTexture>> m_vTextures;	// 텍스쳐 배열
 
