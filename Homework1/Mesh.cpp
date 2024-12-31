@@ -660,7 +660,8 @@ CParticleMesh::CParticleMesh(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Grap
 
 	::CreateBufferResourceS(pd3dDevice, m_pFilledSizeBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_STREAM_OUT);
 	::CreateBufferResourceS(pd3dDevice, m_pd3dReadBackBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
-	::CreateBufferResourceS(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	::CreateBufferResourceS(pd3dDevice, m_pd3dUploadBuffer, sizeof(UINT64), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
+
 	m_pd3dUploadBuffer->Map(0, NULL, (void**)&m_pMappedPointer);
 }
 

@@ -24,7 +24,7 @@ void CreateBufferResourceS(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resour
 	d3dRD.SampleDesc.Quality = 0;
 	d3dRD.Width = nBytes;
 
-	pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, d3dResourceState, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
+	HRESULT hREsult = pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, d3dResourceState, NULL, __uuidof(ID3D12Resource), (void**)pd3dResource.GetAddressOf());
 }
 
 void CreateTexture2DResource(ComPtr<ID3D12Device>& pd3dDevice, ComPtr<ID3D12Resource>& pd3dResource, UINT nWidth, UINT nHeight, D3D12_RESOURCE_FLAGS d3dResourceFlag, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_STATES d3dResourceState)
