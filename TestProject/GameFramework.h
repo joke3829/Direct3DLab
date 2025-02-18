@@ -28,7 +28,7 @@ private:
 	IDXGIFactory4* m_pdxgiFactory{ nullptr };
 	ComPtr<ID3D12Device5> m_pd3dDevice{ nullptr };
 	//ID3D12Device* m_pd3dDevice{ nullptr };
-	IDXGISwapChain3* m_pdxgiSwapChain{ nullptr };
+	IDXGISwapChain4* m_pdxgiSwapChain{ nullptr };
 
 	bool m_bMsaa4xEnable{ false };
 	UINT m_nMsaa4xQualityLevels = 0;

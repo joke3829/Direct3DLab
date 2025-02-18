@@ -330,4 +330,5 @@ void CGameFramework::FrameAdvance()
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 13, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);
+
 }

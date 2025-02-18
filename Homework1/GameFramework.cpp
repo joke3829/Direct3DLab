@@ -37,8 +37,12 @@ void CGameFramework::Release()
 
 void CGameFramework::CreateDevice()
 {
+	auto makeDevice = [&](ComPtr<ID3D12Device>& device) {
+		ComPtr<IDXGIAdapter> adapter{};
+		::D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device));
+		};
 	::CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&m_pdxgiFactory);
-	IDXGIAdapter* pdxgiAdapter{ nullptr };
+	/*IDXGIAdapter* pdxgiAdapter{ nullptr };
 	DXGI_ADAPTER_DESC dxgiAdapterDesc;
 	for (UINT i = 0; m_pdxgiFactory->EnumAdapters(i, &pdxgiAdapter) != DXGI_ERROR_NOT_FOUND; ++i) {
 		pdxgiAdapter->GetDesc(&dxgiAdapterDesc);
@@ -48,7 +52,9 @@ void CGameFramework::CreateDevice()
 	if (!pdxgiAdapter) {
 		m_pdxgiFactory->EnumWarpAdapter(__uuidof(IDXGIAdapter), (void**)&pdxgiAdapter);
 		::D3D12CreateDevice(pdxgiAdapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), (void**)&m_pd3dDevice);
-	}
+	}*/
+	makeDevice(m_pd3dDevice);
+
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS d3dFeatureMsaaQLevel;
 	::ZeroMemory(&d3dFeatureMsaaQLevel, sizeof(D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS));
 	d3dFeatureMsaaQLevel.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
@@ -63,8 +69,8 @@ void CGameFramework::CreateDevice()
 	m_hFenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 	m_nFenceValue = 0;
 
-	if (pdxgiAdapter)
-		pdxgiAdapter->Release();
+	/*if (pdxgiAdapter)
+		pdxgiAdapter->Release();*/
 }
 
 void CGameFramework::CreateCommandLAQ()
@@ -158,7 +164,7 @@ void CGameFramework::CreateRTVDSV()
 	d3dCV.DepthStencil.Depth = 1.0f;
 	d3dCV.DepthStencil.Stencil = 0;
 
-	m_pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_DEPTH_WRITE, &d3dCV, __uuidof(ID3D12Resource), (void**)&m_pd3dDSVBuffer);
+	m_pd3dDevice->CreateCommittedResource(&d3dHP, D3D12_HEAP_FLAG_NONE, &d3dRD, D3D12_RESOURCE_STATE_DEPTH_WRITE, nullptr, __uuidof(ID3D12Resource), (void**)&m_pd3dDSVBuffer);
 	d3dCPUDescriptorHandle = m_pd3dDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	m_pd3dDevice->CreateDepthStencilView(m_pd3dDSVBuffer.Get(), NULL, d3dCPUDescriptorHandle);
 }
